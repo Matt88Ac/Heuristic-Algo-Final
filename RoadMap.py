@@ -293,6 +293,7 @@ class RoadMap:
             self.w[i] = self.roads[i].w
 
     def plot(self):
+        plt.rcParams['axes.facecolor'] = 'whitesmoke'
         plt.xticks([])
         plt.yticks([])
         plt.xlim(-2, self.max_dist + 5)
@@ -327,6 +328,5 @@ class RoadMap:
         plt.legend(fancybox=True, shadow=True, facecolor='cornsilk', edgecolor='gold')
         plt.show()
 
-
-r = RoadMap(8, 17, 30)
-r.plot()
+# r = RoadMap(8, 17, 30)
+# r.plot()
