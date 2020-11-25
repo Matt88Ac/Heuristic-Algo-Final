@@ -215,7 +215,7 @@ class RoadMap:
             else:
                 new_v.append((x, y))
 
-        pos = np.array(choices([0, 1, 2], [0.125, 0.125, 0.75], k=number_of_roads))
+        pos = np.array(choices([0, 1, 2], [0.1, 0.1, 0.8], k=number_of_roads))
 
         for i in range(number_of_roads):
             if pos[i] == 0:
