@@ -335,5 +335,5 @@ class RoadMap:
         plt.show()
 
 
-r = RoadMap(8, 17, 30)
-r.plot()
+# r = RoadMap(8, 17, 30)
+# r.plot()
