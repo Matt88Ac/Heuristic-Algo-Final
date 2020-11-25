@@ -25,7 +25,7 @@ class Junction:
         return ((self.x - other.x) ** dtype + (self.y - other.y) ** dtype) ** (1 / dtype)
 
     def __str__(self) -> str:
-        return str(self.index) + ' at ' + str((self.x, self.y))
+        return "$v_" + str(self.index) + '$ at ' + str((self.x, self.y))
 
     def __len__(self):
         return len(np.unique(self.NeighborsOUT.tolist() + self.NeighborsIN.tolist()))
@@ -311,8 +311,7 @@ class RoadMap:
         names_colors = cm.ScalarMappable(norm, names_colors)
         names_colors = names_colors.to_rgba([int(j1) for j1 in self.juncs])
 
-        plt.suptitle('The Road Map')
-        plt.title('$W = deg(v_1) + deg(v_2) - e^{-dist(v_1, v_2)}$')
+        plt.title('The Road-Map\n$W_{ij} = deg(v_i) + deg(v_j) - e^{-dist(v_i, v_j)}$')
 
         px = [p[0] for p in self.all_xy]
         py = [p[1] for p in self.all_xy]
@@ -335,5 +334,5 @@ class RoadMap:
         plt.show()
 
 
-# r = RoadMap(8, 17, 30)
+# r = RoadMap(10, 17, 30)
 # r.plot()
