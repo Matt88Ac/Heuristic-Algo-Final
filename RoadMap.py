@@ -133,6 +133,9 @@ class Road:
         other = Road(self.j1.copy(), self.j2.copy(), self.w, 0, self.way, self.name)
         return other
 
+    def getJuncs(self):
+        return int(self.j1), int(self.j2)
+
     def __len__(self) -> np.float64:
         return self.w
 
@@ -232,9 +235,7 @@ class RoadMap:
                 self.juncs[new_v[i][1]].connectOUT(self.juncs[new_v[i][0]])
                 self.juncs[new_v[i][0]].connectIN(self.juncs[new_v[i][1]])
 
-        weights = np.array([len(self.juncs[j1]) + len(self.juncs[j2]) for (j1, j2) in new_v], dtype=np.float64)
-        weights += np.array([self.juncs[j1].airDist(self.juncs[j2]) for (j1, j2) in new_v], dtype=np.float64)
-
+        weights = self.__calcW(new_v)
         self.roads = np.array([], dtype=Road)
 
         for i in range(len(weights)):
@@ -242,36 +243,63 @@ class RoadMap:
                                    Road(self.juncs[new_v[i][0]], self.juncs[new_v[i][1]], weights[i], i, pos[i], i + 1))
         self.w: np.ndarray = weights.copy()
 
+    def __calcW(self, v, with_update=False) -> np.ndarray:
+
+        if with_update:
+            # v = new weights
+            weights = v.copy()
+            all_close = np.array([road.isClosed() for road in self.roads], dtype=bool)
+            lens = np.array([len(j1) for j1 in self.juncs])
+            for i in range(len(all_close)):
+                j1, j2 = self.roads[i].getJuncs()
+                weights[i] -= lens[j1] + lens[j2]
+                if all_close[i]:
+                    lens[j1] -= 1
+                    lens[j2] -= 1
+
+            for i in range(len(all_close)):
+                j1, j2 = self.roads[i].getJuncs()
+                weights[i] += lens[j1] + lens[j2]
+
+        else:
+            # v = pairs of vertex, which are connected
+            weights = np.array([len(self.juncs[j1]) + len(self.juncs[j2]) for (j1, j2) in v], dtype=np.float64)
+            weights += np.array([self.juncs[j1].airDist(self.juncs[j2]) for (j1, j2) in v], dtype=np.float64)
+
+        return weights
+
     def updateWeights(self, steps_since_last_update: int = 1):
-        closed = np.array([road.isClosed() for road in self.roads])
-        t_w: np.ndarray = self.w[~closed]
-
-        chances = np.random.normal(t_w.mean(), t_w.std() * steps_since_last_update ** 0.5, len(self.roads))
-        chances = np.abs(chances)
-
-        self.w[~closed] = np.abs(t_w + chances / len(t_w))
-
-        chances = 1 - 1 / steps_since_last_update
+        chances = (100 - steps_since_last_update) / 100
         to_open_close = np.array(choices([0, 1], [chances, 1 - chances], k=len(self.roads)))
 
         for i in range(len(self.roads)):
             if to_open_close[i]:
                 self.roads[i].close_open_road()
+                self.w[i] = self.roads[i].w
 
-            elif not self.roads[i].isClosed():
+        closed = np.array([road.isClosed() for road in self.roads])
+        t_w: np.ndarray = self.w[~closed].copy()
+
+        chances = np.random.normal(t_w.mean(), t_w.std() * steps_since_last_update ** 0.5, len(t_w))
+        chances = np.abs(chances)
+
+        self.w[~closed] = np.abs(t_w + chances / len(t_w))
+        self.w = self.__calcW(self.w, True)
+
+        for i in range(len(self.roads)):
+            if not closed[i]:
                 self.roads[i].update_weight(self.w[i])
 
             self.w[i] = self.roads[i].w
 
     def plot(self):
-        plt.figure(facecolor='silver')
         plt.xticks([])
         plt.yticks([])
-        plt.xlim(-2, self.max_dist + 4)
-        plt.ylim(-2, self.max_dist + 4)
+        plt.xlim(-2, self.max_dist + 5)
+        plt.ylim(-2, self.max_dist + 5)
 
         colors = cm.get_cmap('jet')
-        norm = Colors.Normalize(vmin=self.w.min(), vmax=self.w.max())
+        norm = Colors.Normalize(vmin=self.w.min(), vmax=self.w[self.w < np.inf].max())
         colors = cm.ScalarMappable(norm=norm, cmap=colors)
         cbar = plt.colorbar(colors)
         cbar.set_label('weight')
@@ -288,11 +316,17 @@ class RoadMap:
 
         for i in range(len(self.roads)):
             px, py = self.roads[i].forPlot()
+            if self.w[i] == np.inf:
+                plt.arrow(px[0], py[0], dx=px[1] - px[0], dy=py[1] - py[0], ec='k', lw=2, head_width=0.3,
+                          fill=True, length_includes_head=True, facecolor='k')
+                continue
+
             plt.arrow(px[0], py[0], dx=px[1] - px[0], dy=py[1] - py[0], ec=colors[i], lw=2, head_width=0.3, fill=True,
                       length_includes_head=True, facecolor=colors[i])
 
         plt.legend(fancybox=True, shadow=True, facecolor='cornsilk', edgecolor='gold')
         plt.show()
 
-# r = RoadMap(8, 17, 30)
-# r.plot()
+
+r = RoadMap(8, 17, 30)
+r.plot()
