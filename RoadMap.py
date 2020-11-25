@@ -252,19 +252,19 @@ class RoadMap:
             lens = np.array([len(j1) for j1 in self.juncs])
             for i in range(len(all_close)):
                 j1, j2 = self.roads[i].getJuncs()
-                weights[i] -= lens[j1] + lens[j2]
+                weights[i] += np.exp(-(lens[j1] + lens[j2]))
                 if all_close[i]:
                     lens[j1] -= 1
                     lens[j2] -= 1
 
             for i in range(len(all_close)):
                 j1, j2 = self.roads[i].getJuncs()
-                weights[i] += lens[j1] + lens[j2]
+                weights[i] -= np.exp(-(lens[j1] + lens[j2]))
 
         else:
             # v = pairs of vertex, which are connected
             weights = np.array([len(self.juncs[j1]) + len(self.juncs[j2]) for (j1, j2) in v], dtype=np.float64)
-            weights += np.array([self.juncs[j1].airDist(self.juncs[j2]) for (j1, j2) in v], dtype=np.float64)
+            weights -= np.exp(-np.array([self.juncs[j1].airDist(self.juncs[j2]) for (j1, j2) in v], dtype=np.float64))
 
         return weights
 
@@ -299,21 +299,27 @@ class RoadMap:
         plt.xlim(-2, self.max_dist + 5)
         plt.ylim(-2, self.max_dist + 5)
 
-        colors = cm.get_cmap('jet')
+        colors = cm.get_cmap('coolwarm')
         norm = Colors.Normalize(vmin=self.w.min(), vmax=self.w[self.w < np.inf].max())
         colors = cm.ScalarMappable(norm=norm, cmap=colors)
         cbar = plt.colorbar(colors)
         cbar.set_label('weight')
         colors = colors.to_rgba(self.w)
 
-        plt.title('The Road Map')
+        names_colors = cm.get_cmap('bone')
+        norm = Colors.Normalize(vmin=0, vmax=len(self.juncs))
+        names_colors = cm.ScalarMappable(norm, names_colors)
+        names_colors = names_colors.to_rgba([int(j1) for j1 in self.juncs])
+
+        plt.suptitle('The Road Map')
+        plt.title('$W = deg(v_1) + deg(v_2) - e^{-dist(v_1, v_2)}$')
 
         px = [p[0] for p in self.all_xy]
         py = [p[1] for p in self.all_xy]
 
         names = [str(j1) for j1 in self.juncs]
         for i in range(len(px)):
-            plt.scatter(px[i], py[i], s=len(px) * 10, label=names[i], c=colors[i])
+            plt.scatter(px[i], py[i], s=len(px) * 10, label=names[i], c=names_colors[i])
 
         for i in range(len(self.roads)):
             px, py = self.roads[i].forPlot()
@@ -328,5 +334,6 @@ class RoadMap:
         plt.legend(fancybox=True, shadow=True, facecolor='cornsilk', edgecolor='gold')
         plt.show()
 
-# r = RoadMap(8, 17, 30)
-# r.plot()
+
+r = RoadMap(8, 17, 30)
+r.plot()
