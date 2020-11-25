@@ -267,8 +267,8 @@ class RoadMap:
         plt.figure(facecolor='silver')
         plt.xticks([])
         plt.yticks([])
-        plt.xlim(-2, self.max_dist+4)
-        plt.ylim(-2, self.max_dist+4)
+        plt.xlim(-2, self.max_dist + 4)
+        plt.ylim(-2, self.max_dist + 4)
 
         colors = cm.get_cmap('jet')
         norm = Colors.Normalize(vmin=self.w.min(), vmax=self.w.max())
@@ -284,16 +284,15 @@ class RoadMap:
 
         names = [str(j1) for j1 in self.juncs]
         for i in range(len(px)):
-            plt.scatter(px[i], py[i], s=len(px)*10, label=names[i], c=colors[i])
+            plt.scatter(px[i], py[i], s=len(px) * 10, label=names[i], c=colors[i])
 
         for i in range(len(self.roads)):
             px, py = self.roads[i].forPlot()
-            plt.arrow(px[0], py[0], dx=px[1]-px[0], dy=py[1]-py[0], ec=colors[i], lw=2, head_width=0.3, fill=True,
+            plt.arrow(px[0], py[0], dx=px[1] - px[0], dy=py[1] - py[0], ec=colors[i], lw=2, head_width=0.3, fill=True,
                       length_includes_head=True, facecolor=colors[i])
 
         plt.legend(fancybox=True, shadow=True, facecolor='cornsilk', edgecolor='gold')
         plt.show()
 
-
-#r = RoadMap(8, 17, 30)
-#r.plot()
+# r = RoadMap(8, 17, 30)
+# r.plot()
