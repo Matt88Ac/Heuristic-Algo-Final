@@ -133,6 +133,12 @@ class Road:
         other = Road(self.j1.copy(), self.j2.copy(), self.w, 0, self.way, self.name)
         return other
 
+    def use(self):
+        if self.way == 0:
+            return int(self.j2)
+        else:
+            return int(self.j1)
+
     def getJuncs(self):
         return int(self.j1), int(self.j2)
 
@@ -269,8 +275,11 @@ class RoadMap:
         return weights
 
     def updateWeights(self, steps_since_last_update: int = 1):
-        chances = (100 - steps_since_last_update) / 100
+        chances = (1000 - steps_since_last_update) / 1000
         to_open_close = np.array(choices([0, 1], [chances, 1 - chances], k=len(self.roads)))
+
+        if steps_since_last_update == 0:
+            return
 
         for i in range(len(self.roads)):
             if to_open_close[i]:
