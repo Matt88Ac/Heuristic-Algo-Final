@@ -3,6 +3,7 @@ import webbrowser
 import os
 from selenium import webdriver
 from datetime import datetime
+import numpy as np
 
 
 class RoadMap:
@@ -34,5 +35,25 @@ class RoadMap:
         self.start = start
         self.end = dest
 
+        self.zoom = zoom
+
+    def xyToPixels(self) -> tuple:
+        x0, y0 = self.start
+        x1, y1 = self.end
+
+        def corToPix(x, y):
+            scale = 2 ** self.zoom
+
+            t0 = np.radians(x)
+            t1 = np.radians(y)
+
+            t0 = ((t0 + 180) / 360) * scale
+            t1 = (1 - (np.log(np.tan(t1) + 1.0 / np.cos(t1)) / np.pi)) * scale / 2.0
+
+            return [t0, t1]
+
+        return corToPix(x0, y0), corToPix(x1, y1)
+
 
 rr = RoadMap((32.014191794417144, 34.773603467664515), 'hit', (32.016391794417145, 34.773603467664515), 'muir')
+print(rr.xyToPixels())
