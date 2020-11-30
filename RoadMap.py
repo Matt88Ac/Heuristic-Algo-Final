@@ -11,7 +11,7 @@ class RoadMap:
     def __init__(self, start: tuple, loc_name: str, dest: tuple, dest_name: str, zoom=15.5):
         self.display_page = 'map.html'
         self.destination_tooltip = 'From'
-        self.map = folium.Map(location=start, tiles='Stamen Toner', zoom_start=zoom)
+        self.map = folium.Map(location=start, tiles='stamenwatercolor', zoom_start=zoom)
 
         now = datetime.now().strftime("%d-%m-%Y%H-%M-%S")
         curdir = os.getcwd().replace(os.getcwd()[2], '/') + '/Maps'
@@ -20,12 +20,9 @@ class RoadMap:
         os.mkdir(self.dir)
 
         folium.Marker(start, popup='<i>' + loc_name + '</i>', tooltip=self.destination_tooltip).add_to(self.map)
-        self.map.add_child(folium.LatLngPopup())
         folium.Marker(dest, popup='<i>' + dest_name + '</i>', tooltip='To').add_to(self.map)
-        self.map.add_child(folium.LatLngPopup())
 
         self.map.save(self.fname)
-
         self.start = start
         self.end = dest
 
@@ -34,5 +31,4 @@ class RoadMap:
         self.driver.save_screenshot(self.dir + '/out.png')
 
 
-rr = RoadMap((32.014191794417144, 34.773603467664515), 'hit', (46.8354, -121.7325), 'muir')
-
+rr = RoadMap((32.014191794417144, 34.773603467664515), 'hit', (32.016391794417145, 34.773603467664515), 'muir')
