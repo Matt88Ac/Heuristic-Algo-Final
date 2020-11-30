@@ -14,6 +14,8 @@ class RoadMap:
 
         now = datetime.now().strftime("%d-%m-%Y%H-%M-%S")
         curdir = os.getcwd().replace(os.getcwd()[2], '/') + '/Maps'
+        if not os.path.exists(curdir):
+            os.makedirs(curdir)
         self.dir = curdir + '/' + now
         self.fname = self.dir + '/' + self.display_page
         os.mkdir(self.dir)
