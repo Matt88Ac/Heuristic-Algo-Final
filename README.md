@@ -10,4 +10,5 @@ https://stackoverflow.com/questions/56550313/how-to-plot-routes-between-pairs-of
 איך להריץ את הפרויקט:
 1.	להתקין pycharm.
 2.	להתקין חבילת folium (אפשר בתוך settings -> interpreter -> להוסיף את החבילה הזאת. או אפשר פשוט ע"י תיקון שגיאות אוטומטי של pycharm שמציע לבד להתקין את החבילה).
-3.	להתקין חבילת webbrowser (בדומה לסעיף 2).
+~~3.	להתקין חבילת webbrowser (בדומה לסעיף 2).~~
+4. לוודא שכרום מעודכן לגרסא 87+
