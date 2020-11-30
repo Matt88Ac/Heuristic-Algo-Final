@@ -3,32 +3,36 @@ import webbrowser
 import os
 from selenium import webdriver
 import html
+from datetime import datetime
 
 
 class RoadMap:
 
-    def __init__(self):
+    def __init__(self, start: tuple, loc_name: str, dest: tuple, dest_name: str, zoom=15.5):
         self.display_page = 'map.html'
-        self.destination_tooltip = 'Destination'
-        self.map = folium.Map
+        self.destination_tooltip = 'From'
+        self.map = folium.Map(location=start, tiles='Stamen Toner', zoom_start=zoom)
 
-        f = os.getcwd().replace(os.getcwd()[2], '/') + '/map.html'
+        now = datetime.now().strftime("%d-%m-%Y%H-%M-%S")
+        curdir = os.getcwd().replace(os.getcwd()[2], '/') + '/Maps'
+        self.dir = curdir + '/' + now
+        self.fname = self.dir + '/' + self.display_page
+        os.mkdir(self.dir)
 
-        driver = webdriver.Chrome()
-        driver.get('file://' + f)
-        driver.save_screenshot('out.png')
+        folium.Marker(start, popup='<i>' + loc_name + '</i>', tooltip=self.destination_tooltip).add_to(self.map)
+        self.map.add_child(folium.LatLngPopup())
+        folium.Marker(dest, popup='<i>' + dest_name + '</i>', tooltip='To').add_to(self.map)
+        self.map.add_child(folium.LatLngPopup())
+
+        self.map.save(self.fname)
+
+        self.start = start
+        self.end = dest
+
+        self.driver = webdriver.Chrome()
+        self.driver.get('file://' + self.fname)
+        self.driver.save_screenshot(self.dir + '/out.png')
 
 
-HIT_COORDINATES = (32.014191794417144, 34.773603467664515)
-DISPLAY_PAGE = 'map.html'
-DESTINATION_TOOLTIP = 'Destination'
-foliMap = folium.Map(location=HIT_COORDINATES, tiles='Stamen Toner', zoom_start=15.5, png_enabled=True)
-tooltip = DESTINATION_TOOLTIP
-folium.Marker(HIT_COORDINATES, popup='<i>HIT</i>', tooltip=tooltip).add_to(foliMap)
-foliMap.add_child(folium.LatLngPopup())
-folium.Marker(
-    [46.8354, -121.7325],
-    popup='Camp Muir'
-).add_to(foliMap)
-foliMap.add_child(folium.CircleMarker(popup='Waypoint', location=HIT_COORDINATES))
-foliMap.save(DISPLAY_PAGE)
+rr = RoadMap((32.014191794417144, 34.773603467664515), 'hit', (46.8354, -121.7325), 'muir')
+
