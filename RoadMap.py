@@ -37,6 +37,17 @@ class RoadMap:
 
         self.zoom = zoom
 
+    def get_indexes_of_square_by_coordinate(self, c):  # each square is cell in the matrix
+        x = 1
+        y = 1
+        # calculate the picture width and high
+        # take another coordinate in the range and ???
+        return x, y
+
+    def get_coordinate_by_indexes_of_square(self, x, y):  # each square is cell in the matrix
+        c = 1
+        return c
+
     def xyToPixels(self) -> tuple:
         x0, y0 = self.start
         x1, y1 = self.end
