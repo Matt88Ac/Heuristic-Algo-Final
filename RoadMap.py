@@ -11,7 +11,11 @@ class RoadMap:
     def __init__(self, start: tuple, loc_name: str, dest: tuple, dest_name: str, zoom=14.5):
         self.display_page = 'map.html'
         self.destination_tooltip = 'From'
-        self.map = folium.Map(location=start, tiles='stamenwatercolor', zoom_start=zoom)
+        x0, y0 = start
+        x1, y1 = dest
+
+        self.map = folium.Map(location=start, tiles='stamenwatercolor')
+        self.map.add_child(folium.LatLngPopup())
 
         now = datetime.now().strftime("%d-%m-%Y%H-%M-%S")
         curdir = os.getcwd().replace(os.getcwd()[2], '/') + '/Maps'
@@ -65,6 +69,9 @@ class RoadMap:
 
         return corToPix(x0, y0), corToPix(x1, y1)
 
+    def loadPage(self):
+        webbrowser.open(self.fname)
 
-rr = RoadMap((32.014191794417144, 34.773603467664515), 'hit', (32.016391794417145, 34.773603467664515), 'muir')
-print(rr.xyToPixels())
+
+rr = RoadMap((32.0141, 34.7736), 'hit', (32.0163, 34.7736), 'muir')
+print(rr.zoom)
