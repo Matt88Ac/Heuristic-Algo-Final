@@ -65,7 +65,7 @@ class RoadMap:
             t0 = ((t0 + 180) / 360) * scale
             t1 = (1 - (np.log(np.tan(t1) + 1.0 / np.cos(t1)) / np.pi)) * scale / 2.0
 
-            return [t0, t1]
+            return [np.floor(t0), np.floor(t1)]
 
         return corToPix(x0, y0), corToPix(x1, y1)
 
