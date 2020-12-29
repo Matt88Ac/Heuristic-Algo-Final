@@ -77,7 +77,7 @@ class RoadMap:
         args = args[0]
         n1, n2 = args
 
-        def NoneCase(n3):
+        def NoneCase(n3): # returns each of n3's neighbors
             return np.unique(nx.all_neighbors(self.G, n3))
 
         if n1 is None:
@@ -85,7 +85,7 @@ class RoadMap:
 
         if n2 is None:
             return NoneCase(n1)
-
+        # returns the edge consists of (n1, n2) if exists
         cond11 = self.edges[:, 0] == n1
         cond12 = self.edges[:, 1] == n2
 
@@ -103,10 +103,10 @@ class RoadMap:
 
         return None
 
-    def __len__(self):
+    def __len__(self): # return the number of vertices in the graph G
         return len(self.G)
 
-    def fromOsPoint_to_tuple(self, p) -> tuple:
+    def fromOsPoint_to_tuple(self, p) -> tuple: # translates the node's name to a coordinate
         return self.coordinates[self.nodes == p][0][0], self.coordinates[self.nodes == p][0][1]
 
     def __Dijkstra(self):
