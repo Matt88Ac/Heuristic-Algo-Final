@@ -41,8 +41,7 @@ class RoadMap:
 
         self.pos = nx.spring_layout(self.G)
 
-        # route = nx.shortest_path(self.G, self.st, self.end, weight='travel_time')
-        # ox.plot_graph_route(self.G, route, route_linewidth=6, node_size=0, bgcolor='k')
+        self.algorithms = [self.__AStar, self.__Dijkstra, self.__PRM]
 
     def __getitem__(self, *args):
         args = args[0]
@@ -88,7 +87,30 @@ class RoadMap:
 
         return None
 
-    def plot(self):
+    def __Dijkstra(self):
+        pass
+
+    def __AStar(self, heuristic_function=lambda dx, dy: 0):
+        pass
+
+    def __PRM(self):
+        pass
+
+    def applyAlgorithm(self, algorithm, heuristic_function=lambda dx, dy: 0):
+        """
+        :param algorithm: the wanted algorithm to apply on the graph, in order to find the shortest path from start
+        to end.
+        Could be one of 'A*'=0, 'Dijkstra'=1, 'PRM'=2.
+        :param heuristic_function: the wanted heuristic function, of type function (not str)
+        """
+
+        if algorithm != 0:
+            heuristic_function = lambda dx, dy: 0
+
+        else:
+            self.algorithms[0](heuristic_function)
+
+    def plot(self, show=True):
         colors = np.repeat('dimgray', len(self.G))
         colors[self.nodes == self.st] = 'lime'
         colors[self.nodes == self.end] = 'r'
@@ -98,7 +120,8 @@ class RoadMap:
         ox.plot_graph(self.G, node_color=colors, bgcolor='cornsilk', edge_color='navy',
                       edge_linewidth=3, edge_alpha=1, node_size=int(len(self.G) / 2), ax=plt.gca(), show=False)
         plt.legend(shadow=True, fancybox=True, edgecolor='gold', facecolor='wheat')
-        plt.show()
+        if show:
+            plt.show()
 
 
 rr = RoadMap((32.0141, 34.7736), (32.0163, 34.7736))
