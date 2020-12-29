@@ -63,8 +63,7 @@ class RoadMap:
         self.edges = np.array(list(self.G.edges))
 
         self.coordinates = []
-        for i, node in enumerate(data):
-            nd = node[0]
+        for node in data:
             self.coordinates.append((node[1]['y'], node[1]['x']))
 
         self.coordinates = np.array(self.coordinates)
@@ -143,7 +142,7 @@ class RoadMap:
         plt.plot([0], [0], label='goal', c='r')
 
         ox.plot_graph(self.G, node_color=colors, bgcolor='cornsilk', edge_color='navy',
-                      edge_linewidth=3, edge_alpha=1, node_size=int(len(self.G) / 2), ax=plt.gca(), show=False)
+                      edge_linewidth=3, edge_alpha=1, node_size=int(2*len(self.G) / 3), ax=plt.gca(), show=False)
         plt.legend(shadow=True, fancybox=True, edgecolor='gold', facecolor='wheat')
         if show:
             plt.show()
