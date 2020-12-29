@@ -77,7 +77,7 @@ class RoadMap:
         args = args[0]
         n1, n2 = args
 
-        def NoneCase(n3): # returns each of n3's neighbors
+        def NoneCase(n3):  # returns each of n3's neighbors
             return np.unique(nx.all_neighbors(self.G, n3))
 
         if n1 is None:
@@ -103,10 +103,10 @@ class RoadMap:
 
         return None
 
-    def __len__(self): # return the number of vertices in the graph G
+    def __len__(self):  # return the number of vertices in the graph G
         return len(self.G)
 
-    def fromOsPoint_to_tuple(self, p) -> tuple: # translates the node's name to a coordinate
+    def fromOsPoint_to_tuple(self, p) -> tuple:  # translates the node's name to a coordinate
         return self.coordinates[self.nodes == p][0][0], self.coordinates[self.nodes == p][0][1]
 
     def __Dijkstra(self):
@@ -140,13 +140,14 @@ class RoadMap:
         colors[self.nodes == self.end] = 'r'
         plt.plot([0], [0], label='start', c='lime')
         plt.plot([0], [0], label='goal', c='r')
-
+        plt.plot([0], [0], label='nodes', c='dimgray')
+        s = int(8 * len(self.G) / 13)
         ox.plot_graph(self.G, node_color=colors, bgcolor='cornsilk', edge_color='navy',
-                      edge_linewidth=3, edge_alpha=1, node_size=int(2*len(self.G) / 3), ax=plt.gca(), show=False)
+                      edge_linewidth=3, edge_alpha=1, node_size=s, ax=plt.gca(), show=False)
         plt.legend(shadow=True, fancybox=True, edgecolor='gold', facecolor='wheat')
         if show:
             plt.show()
 
 
-rr = RoadMap((32.0141, 34.7736), (32.0163, 34.7736))
+rr = RoadMap((32.0141, 34.7736), (32.0183, 34.7736))
 rr.plot()
