@@ -5,17 +5,16 @@ from datetime import datetime
 import numpy as np
 from numpy import deg2rad, cos, sin, inf, random
 import matplotlib.pyplot as plt
-from matplotlib.collections import PatchCollection
 
 
-def distance_between_coordinates(c1: tuple, c2: tuple) -> float:
+def CoordinatesEuclidean(c1: tuple, c2: tuple) -> float:
     lat1, lon1 = c1
     lat2, lon2 = c2
 
     R = 6371 * 10 ** 3
 
-    dx = deg2rad(lat2 - lat1)  # dlat
-    dy = deg2rad(lon2 - lon1)  # dlon
+    dx = deg2rad(abs(lat2 - lat1))  # dlat
+    dy = deg2rad(abs(lon2 - lon1))  # dlon
 
     a = sin(dx / 2) ** 2 + cos(deg2rad(lat1)) * cos(deg2rad(lat2)) * sin(dy / 2) ** 2
 
@@ -23,22 +22,54 @@ def distance_between_coordinates(c1: tuple, c2: tuple) -> float:
     return R * c
 
 
+def CoordinatesManhattan(c1: tuple, c2: tuple):
+    lat1, lon1 = c1
+    lat2, lon2 = c2
+    R = 6371 * 10 ** 3
+
+    def getR(x0, x1):
+        a = sin(deg2rad(abs(x0 - x1)) / 2) ** 2
+        c = 2 * np.arctan2(a ** 0.5, (1 - a) ** 0.5)
+        return R * c
+
+    return getR(lat1, lat2) + getR(lon1, lon2)
+
+
+def CoordinatesChebyshev(c1: tuple, c2: tuple):
+    lat1, lon1 = c1
+    lat2, lon2 = c2
+    R = 6371 * 10 ** 3
+
+    def getR(x0, x1):
+        a = sin(deg2rad(abs(x0 - x1)) / 2) ** 2
+        c = 2 * np.arctan2(a ** 0.5, (1 - a) ** 0.5)
+        return R * c
+
+    return max(getR(lat1, lat2), getR(lon1, lon2))
+
+
 class RoadMap:
 
     def __init__(self, start: tuple, end: tuple, network_type='walk'):
-        dist = distance_between_coordinates(start, end) + 100
+        dist = CoordinatesEuclidean(start, end) + 100
         self.dist = int(dist)
         self.G = ox.graph_from_point(start, dist=self.dist, network_type=network_type)
+        data = self.G.nodes(data=True)
 
         self.st = ox.get_nearest_node(self.G, start)
         self.end = ox.get_nearest_node(self.G, end)
 
-        self.st_astuple = start
-        self.end_astuple = end
-
         self.nodes = np.array(list(self.G.nodes))
         self.edges = np.array(list(self.G.edges))
 
+        self.coordinates = []
+        for i, node in enumerate(data):
+            nd = node[0]
+            self.coordinates.append((node[1]['y'], node[1]['x']))
+
+        self.coordinates = np.array(self.coordinates)
+        self.coordinates = self.coordinates[self.nodes.argsort()]
+        self.nodes.sort()
         self.pos = nx.spring_layout(self.G)
 
         self.algorithms = [self.__AStar, self.__Dijkstra, self.__PRM]
@@ -48,21 +79,7 @@ class RoadMap:
         n1, n2 = args
 
         def NoneCase(n3):
-            cond13 = self.edges[self.edges[:, 0] == n3]
-            cond23 = self.edges[self.edges[:, 1] == n3]
-
-            if len(cond23) == 0:
-                cond23 = None
-            else:
-                cond23 = cond23[:, 0]
-
-            if len(cond13) == 0:
-                if not cond23:
-                    return []
-                return cond23
-
-            cond13 = cond13[:, 1]
-            return np.unique(np.append(cond13, cond23))
+            return np.unique(nx.all_neighbors(self.G, n3))
 
         if n1 is None:
             return NoneCase(n2)
@@ -87,11 +104,19 @@ class RoadMap:
 
         return None
 
+    def __len__(self):
+        return len(self.G)
+
+    def fromOsPoint_to_tuple(self, p) -> tuple:
+        return self.coordinates[self.nodes == p][0][0], self.coordinates[self.nodes == p][0][1]
+
     def __Dijkstra(self):
         pass
 
     def __AStar(self, heuristic_function=lambda dx, dy: 0):
-        pass
+        f = np.zeros(len(self))
+        g: np.ndarray = f.copy()
+        h: np.ndarray = f.copy()
 
     def __PRM(self):
         pass
