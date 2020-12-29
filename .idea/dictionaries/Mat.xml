@@ -2,6 +2,8 @@
   <dictionary name="Mat">
     <words>
       <w>chromedriver</w>
+      <w>dlat</w>
+      <w>dlon</w>
       <w>dtype</w>
       <w>juncs</w>
       <w>stamenwatercolor</w>
