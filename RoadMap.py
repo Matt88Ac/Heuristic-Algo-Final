@@ -5,6 +5,7 @@ from datetime import datetime
 import numpy as np
 from numpy import deg2rad, cos, sin, inf, random
 import matplotlib.pyplot as plt
+import heapq
 
 
 def CoordinatesEuclidean(c1: tuple, c2: tuple) -> float:
@@ -112,10 +113,37 @@ class RoadMap:
     def __Dijkstra(self):
         pass
 
-    def __AStar(self, heuristic_function=lambda dx, dy: 0):
-        f = np.zeros(len(self))
-        g: np.ndarray = f.copy()
+    def __AStar(self, heuristic_function=CoordinatesEuclidean, g=None, f=None):
+        if not f:
+            f = np.zeros(len(self))
+        if not g:
+            g: np.ndarray = np.ones(len(self))
         h: np.ndarray = f.copy()
+
+        path = [self.st]
+
+        closed = []
+        opened = [self.st]
+
+        end = self.end
+        start = self.st
+
+        end_tup = self.fromOsPoint_to_tuple(end)
+
+        current = None
+
+        g[self.nodes == start] = 0
+
+        while len(opened) > 0 and current is not end:
+            current = heapq.heappop(opened)
+            neighbors = self[current]
+
+            for ne in neighbors:
+                h = heuristic_function(self.fromOsPoint_to_tuple(ne), end_tup)
+
+
+
+
 
     def __PRM(self):
         pass
@@ -149,5 +177,5 @@ class RoadMap:
             plt.show()
 
 
-rr = RoadMap((32.0141, 34.7736), (32.0183, 34.7736))
+rr = RoadMap((32.0141, 34.7736), (32.0183, 34.7761))
 rr.plot()
