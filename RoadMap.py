@@ -58,7 +58,7 @@ class RoadMap:
         self.nodes = np.array(list(self.G.nodes))
         self.edges = np.array(list(self.G.edges), dtype=float)
 
-        w = np.zeros(self.edges.shape[0], dtype=float)
+        w = np.ones(self.edges.shape[0], dtype=float)*inf
         for u, v, d in self.G.edges(data=True):
             try:
                 lanes = max(int(d['lanes']), 1)
@@ -165,11 +165,9 @@ class RoadMap:
             print('There is no path')
             return []
 
-    def __AStar(self, heuristic_function=calcEuclideanDistanceOnEarth, g=None, f=None, with_time=True, with_vis=False):
-        if not f:
-            f = np.zeros(len(self))
-        if not g:
-            g: np.ndarray = np.zeros(len(self))
+    def __AStar(self, heuristic_function=calcEuclideanDistanceOnEarth, with_time=True, with_vis=False):
+        f = np.zeros(len(self))
+        g: np.ndarray = np.zeros(len(self))
         h: np.ndarray = f.copy()
 
         h[self.nodes == self.start] = heuristic_function(self.fromOsPoint_to_tuple(self.start),
@@ -188,7 +186,8 @@ class RoadMap:
             plt.ion()
 
         while len(opened) > 0 and current is not self.end:
-            current = heapq.heappop(opened)
+            current = opened[0]
+            opened.pop(0)
             steps += 1
             neighbors = self[current, None]
             for ne in neighbors:
@@ -213,7 +212,7 @@ class RoadMap:
                     self.plot(show=True, path=path)
                 continue
 
-            heapq.heappush(opened, candidate)
+            opened.append(candidate)
             path.append((current, candidate))
             if with_vis:
                 self.plot(show=False, path=path)
@@ -253,11 +252,11 @@ class RoadMap:
         colors[self.nodes == self.start] = 'lime'
         colors[self.nodes == self.end] = 'r'
 
-        ox.plot_graph(self.G, node_color=colors, bgcolor='cornsilk', edge_color=paths,
+        ox.plot_graph(self.G, node_color=colors, edge_color=paths,
                       edge_linewidth=3, edge_alpha=1, ax=plt.gca(), show=False)
 
-        ax = plt.axes()
-        ax.set_facecolor("lightcoral")
+        # ax = plt.axes()
+        # ax.set_facecolor("lightcoral")
 
         if show:
             plt.ioff()
@@ -269,5 +268,5 @@ class RoadMap:
 
 
 rm = RoadMap((32.0141, 34.7736), (32.0184, 34.7761))
-p = rm.applyAlgorithm(0, calcEuclideanDistanceOnEarth)
+p = rm.applyAlgorithm(1, calcEuclideanDistanceOnEarth)
 rm.plot(path=p)
