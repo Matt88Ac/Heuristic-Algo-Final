@@ -174,6 +174,7 @@ class RoadMap:
             path.append((current, candidate))
 
         print(f'time of work for A* = {time.time() - t}')
+        print(f'total cost = {np.sum(f[np.isin(self.nodes, path)])}')
         return path
 
     def __PRM(self):
@@ -194,7 +195,7 @@ class RoadMap:
             return self.algorithms[0](heuristic_function)
 
     def plot(self, show=True, path=None):
-        paths = np.repeat('navy', len(self.edges))
+        paths = np.repeat('royalblue', len(self.edges))
 
         if path is not None:
             if len(path) > 0:
@@ -204,12 +205,12 @@ class RoadMap:
                 cond += (self.edges[:, 1] == v) & (self.edges[:, 0] == u)
                 paths[cond] = 'gold'
 
-        colors = np.repeat('dimgray', len(self.G))
+        colors = np.repeat('indigo', len(self.G))
         colors[self.nodes == self.st] = 'lime'
         colors[self.nodes == self.end] = 'r'
         plt.plot([0], [0], label='start', c='lime')
         plt.plot([0], [0], label='goal', c='r')
-        plt.plot([0], [0], label='nodes', c='dimgray')
+        plt.plot([0], [0], label='nodes', c='indigo')
         ox.plot_graph(self.G, node_color=colors, bgcolor='cornsilk', edge_color=paths,
                       edge_linewidth=3, edge_alpha=1, ax=plt.gca(), show=False)
         plt.legend(shadow=True, fancybox=True, edgecolor='gold', facecolor='wheat')
