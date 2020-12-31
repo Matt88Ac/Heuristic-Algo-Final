@@ -1,50 +1,47 @@
 import osmnx as ox
 import networkx as nx
-import os
-from datetime import datetime
 import numpy as np
 from numpy import deg2rad, cos, sin, inf, random
 import matplotlib.pyplot as plt
 import heapq
 
+EARTH_RADIUS = 6371 * 10 ** 3   # Earth radius [M]
+SIGHT_RADIUS_ADDITION = 100     # The addition to the radius between the user's start and stop points [M]
 
-def CoordinatesEuclidean(c1: tuple, c2: tuple) -> float:
+# Calculates Euclidean distance between two coordinates on earth
+def calcEuclideanDistanceOnEarth(c1: tuple, c2: tuple) -> float:
     lat1, lon1 = c1
     lat2, lon2 = c2
 
-    R = 6371 * 10 ** 3
-
+    # convert angles from degree to radian
     dx = deg2rad(abs(lat2 - lat1))  # dlat
     dy = deg2rad(abs(lon2 - lon1))  # dlon
 
     a = sin(dx / 2) ** 2 + cos(deg2rad(lat1)) * cos(deg2rad(lat2)) * sin(dy / 2) ** 2
-
     c = 2 * np.arctan2(a ** 0.5, (1 - a) ** 0.5)
-    return R * c
+    return EARTH_RADIUS * c
 
 
-def CoordinatesManhattan(c1: tuple, c2: tuple):
+def calcManhattanDistanceOnEarth(c1: tuple, c2: tuple):
     lat1, lon1 = c1
     lat2, lon2 = c2
-    R = 6371 * 10 ** 3
 
     def getR(x0, x1):
         a = sin(deg2rad(abs(x0 - x1)) / 2) ** 2
         c = 2 * np.arctan2(a ** 0.5, (1 - a) ** 0.5)
-        return R * c
+        return EARTH_RADIUS * c
 
     return getR(lat1, lat2) + getR(lon1, lon2)
 
 
-def CoordinatesChebyshev(c1: tuple, c2: tuple):
+def calcChebyshevDistanceOnEarth(c1: tuple, c2: tuple):
     lat1, lon1 = c1
     lat2, lon2 = c2
-    R = 6371 * 10 ** 3
 
     def getR(x0, x1):
         a = sin(deg2rad(abs(x0 - x1)) / 2) ** 2
         c = 2 * np.arctan2(a ** 0.5, (1 - a) ** 0.5)
-        return R * c
+        return EARTH_RADIUS * c
 
     return max(getR(lat1, lat2), getR(lon1, lon2))
 
@@ -52,17 +49,14 @@ def CoordinatesChebyshev(c1: tuple, c2: tuple):
 class RoadMap:
 
     def __init__(self, start: tuple, end: tuple, network_type='walk'):
-        dist = CoordinatesEuclidean(start, end) + 100
-        self.dist = int(dist)
+        self.dist = int(calcEuclideanDistanceOnEarth(start, end) + SIGHT_RADIUS_ADDITION)
         self.G = ox.graph_from_point(start, dist=self.dist, network_type=network_type)
-        data = self.G.nodes(data=True)
-
-        self.st = ox.get_nearest_node(self.G, start)
+        self.start = ox.get_nearest_node(self.G, start)
         self.end = ox.get_nearest_node(self.G, end)
-
         self.nodes = np.array(list(self.G.nodes))
         self.edges = np.array(list(self.G.edges))
 
+        data = self.G.nodes(data=True)
         self.coordinates = []
         for node in data:
             self.coordinates.append((node[1]['y'], node[1]['x']))
@@ -104,7 +98,8 @@ class RoadMap:
 
         return None
 
-    def __len__(self):  # return the number of vertices in the graph G
+    # Returns the number of vertices in the graph G
+    def __len__(self):
         return len(self.G)
 
     def fromOsPoint_to_tuple(self, p) -> tuple:  # translates the node's name to a coordinate
@@ -113,20 +108,20 @@ class RoadMap:
     def __Dijkstra(self):
         pass
 
-    def __AStar(self, heuristic_function=CoordinatesEuclidean, g=None, f=None):
+    def __AStar(self, heuristic_function=calcEuclideanDistanceOnEarth, g=None, f=None):
         if not f:
             f = np.zeros(len(self))
         if not g:
             g: np.ndarray = np.ones(len(self))
         h: np.ndarray = f.copy()
 
-        path = [self.st]
+        path = [self.start]
 
         closed = []
-        opened = [self.st]
+        opened = [self.start]
 
         end = self.end
-        start = self.st
+        start = self.start
 
         end_tup = self.fromOsPoint_to_tuple(end)
 
@@ -140,10 +135,6 @@ class RoadMap:
 
             for ne in neighbors:
                 h = heuristic_function(self.fromOsPoint_to_tuple(ne), end_tup)
-
-
-
-
 
     def __PRM(self):
         pass
@@ -164,7 +155,7 @@ class RoadMap:
 
     def plot(self, show=True):
         colors = np.repeat('dimgray', len(self.G))
-        colors[self.nodes == self.st] = 'lime'
+        colors[self.nodes == self.start] = 'lime'
         colors[self.nodes == self.end] = 'r'
         plt.plot([0], [0], label='start', c='lime')
         plt.plot([0], [0], label='goal', c='r')
@@ -177,5 +168,5 @@ class RoadMap:
             plt.show()
 
 
-rr = RoadMap((32.0141, 34.7736), (32.0183, 34.7761))
-rr.plot()
+rm = RoadMap((32.0141, 34.7736), (32.0183, 34.7761))
+rm.plot()
