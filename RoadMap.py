@@ -57,9 +57,9 @@ class RoadMap:
         self.start = ox.get_nearest_node(self.G, start)
         self.end = ox.get_nearest_node(self.G, end)
         self.nodes = np.array(list(self.G.nodes))
-        self.edges = np.array(list(self.G.edges))
+        self.edges = np.array(list(self.G.edges), dtype=float)
 
-        w = np.zeros(self.edges.shape[0])
+        w = np.zeros(self.edges.shape[0], dtype=float)
         for u, v, d in self.G.edges(data=True):
             try:
                 lanes = max(int(d['lanes']), 1)
