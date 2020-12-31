@@ -103,11 +103,6 @@ class RoadMap:
 
         cond1 = cond11 & cond12
 
-        cond11 = self.edges[:, 1] == n1
-        cond12 = self.edges[:, 0] == n2
-
-        cond2 = cond11 & cond12
-
         if cond1.sum() > 0:
             return self.edges[cond1][:, 2][0]
         # elif cond2.sum() > 0:
@@ -187,9 +182,11 @@ class RoadMap:
         steps = 0
         current = None
         t = time.time()
+
         if with_vis:
             plt.figure()
             plt.ion()
+
         while len(opened) > 0 and current is not self.end:
             current = heapq.heappop(opened)
             steps += 1
@@ -201,7 +198,7 @@ class RoadMap:
                 g[self.nodes == ne] = g1 = self[current, ne]
                 f[self.nodes == ne] = h1 + g1
 
-            cond = np.isin(self.nodes, neighbors) & (np.isin(self.nodes, closed, invert=True))
+            cond = np.isin(self.nodes, neighbors) & (~np.isin(self.nodes, closed))
             if cond.sum() == 0:
                 print('There is no path')
                 return []
@@ -258,6 +255,10 @@ class RoadMap:
 
         ox.plot_graph(self.G, node_color=colors, bgcolor='cornsilk', edge_color=paths,
                       edge_linewidth=3, edge_alpha=1, ax=plt.gca(), show=False)
+
+        ax = plt.axes()
+        ax.set_facecolor("lightcoral")
+
         if show:
             plt.ioff()
             plt.plot([0], [0], label='start', c='lime')
@@ -268,5 +269,5 @@ class RoadMap:
 
 
 rm = RoadMap((32.0141, 34.7736), (32.0184, 34.7761))
-p = rm.applyAlgorithm(0, calcEuclideanDistanceOnEarth, with_viz=True)
-#rm.plot(path=p)
+p = rm.applyAlgorithm(0, calcEuclideanDistanceOnEarth)
+rm.plot(path=p)
