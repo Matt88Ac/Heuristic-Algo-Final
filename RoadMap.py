@@ -7,8 +7,9 @@ from numpy import deg2rad, cos, sin, inf, random
 import matplotlib.pyplot as plt
 import heapq
 
-EARTH_RADIUS = 6371 * 10 ** 3   # Earth radius [M]
-SIGHT_RADIUS_ADDITION = 100     # The addition to the radius between the user's start and stop points [M]
+EARTH_RADIUS = 6371 * 10 ** 3  # Earth radius [M]
+SIGHT_RADIUS_ADDITION = 100  # The addition to the radius between the user's start and stop points [M]
+
 
 # Calculates Euclidean distance between two coordinates on earth
 def calcEuclideanDistanceOnEarth(c1: tuple, c2: tuple) -> float:
@@ -122,9 +123,6 @@ class RoadMap:
     def fromOsPoint_to_tuple(self, pt) -> tuple:  # translates the node's name to a coordinate
         return self.coordinates[self.nodes == pt][0][0], self.coordinates[self.nodes == pt][0][1]
 
-    def __getAllDistancesFromGoal(self) -> np.ndarray:
-        pass
-
     def __Dijkstra(self):
         opened = [self.start]
         closed = []
@@ -181,7 +179,7 @@ class RoadMap:
         h: np.ndarray = f.copy()
 
         h[self.nodes == self.start] = heuristic_function(self.fromOsPoint_to_tuple(self.start),
-                                                      self.fromOsPoint_to_tuple(self.end))
+                                                         self.fromOsPoint_to_tuple(self.end))
         f[self.nodes == self.start] = h[self.nodes == self.start][0]
         path = []
 
@@ -262,5 +260,5 @@ class RoadMap:
 
 
 rm = RoadMap((32.0141, 34.7736), (32.0183, 34.7761))
-p = rm.applyAlgorithm(1)
+p = rm.applyAlgorithm(0, calcManhattanDistanceOnEarth)
 rm.plot(path=p)
