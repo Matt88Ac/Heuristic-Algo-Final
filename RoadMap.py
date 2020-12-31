@@ -83,8 +83,6 @@ class RoadMap:
         self.nodes.sort()
         self.pos = nx.spring_layout(self.G)
 
-        self.algorithms = [self.__AStar, self.__Dijkstra, self.__PRM]
-
     def __getitem__(self, *args):
         args = args[0]
         n1, n2 = args
@@ -216,24 +214,19 @@ class RoadMap:
         print(f'total steps = {steps}')
         return path
 
-    def __PRM(self):
-        pass
-
-    def applyAlgorithm(self, algorithm, heuristic_function=lambda dx, dy: 0) -> list:
+    def applyAlgorithm(self, algorithm, heuristic_function=calcEuclideanDistanceOnEarth) -> list:
         """
         :param algorithm: the wanted algorithm to apply on the graph, in order to find the shortest path from start
         to end.
-        Could be one of 'A*'=0, 'Dijkstra'=1, 'PRM'=2.
+        Could be one of 'A*'=0, 'Dijkstra'=1.
         :param heuristic_function: the wanted heuristic function, of type function (not str)
         """
 
-        if algorithm != 0:
-            heuristic_function = lambda dx, dy: 0
+        if algorithm == 0:
+            return self.__AStar(heuristic_function)
 
         else:
-            return self.algorithms[0](heuristic_function)
-
-        return self.algorithms[algorithm]()
+            return self.__Dijkstra()
 
     def plot(self, show=True, path=None):
         paths = np.repeat('royalblue', len(self.edges))
