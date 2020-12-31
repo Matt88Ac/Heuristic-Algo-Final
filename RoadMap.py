@@ -4,7 +4,6 @@ import time
 import numpy as np
 from numpy import deg2rad, cos, sin, inf
 import matplotlib.pyplot as plt
-import heapq
 
 EARTH_RADIUS = 6371 * 10 ** 3  # Earth radius [M]
 SIGHT_RADIUS_ADDITION = 10  # The addition to the radius between the user's start and stop points [M]
