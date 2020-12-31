@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import heapq
 
 EARTH_RADIUS = 6371 * 10 ** 3  # Earth radius [M]
-SIGHT_RADIUS_ADDITION = 100  # The addition to the radius between the user's start and stop points [M]
+SIGHT_RADIUS_ADDITION = 10  # The addition to the radius between the user's start and stop points [M]
 
 
 # Calculates Euclidean distance between two coordinates on earth
@@ -260,5 +260,5 @@ class RoadMap:
 
 
 rm = RoadMap((32.0141, 34.7736), (32.0183, 34.7761))
-p = rm.applyAlgorithm(0, calcManhattanDistanceOnEarth)
+p = rm.applyAlgorithm(1, calcManhattanDistanceOnEarth)
 rm.plot(path=p)
