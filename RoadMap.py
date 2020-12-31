@@ -121,8 +121,8 @@ class RoadMap:
     def __len__(self):  # return the number of vertices in the graph G
         return len(self.G)
 
-    def fromOsPoint_to_tuple(self, p) -> tuple:  # translates the node's name to a coordinate
-        return self.coordinates[self.nodes == p][0][0], self.coordinates[self.nodes == p][0][1]
+    def fromOsPoint_to_tuple(self, pt) -> tuple:  # translates the node's name to a coordinate
+        return self.coordinates[self.nodes == pt][0][0], self.coordinates[self.nodes == pt][0][1]
 
     def __getAllDistancesFromGoal(self) -> np.ndarray:
         pass
@@ -130,7 +130,7 @@ class RoadMap:
     def __Dijkstra(self):
         pass
 
-    def __AStar(self, heuristic_function=CoordinatesEuclidean, g=None, f=None):
+    def __AStar(self, heuristic_function=CoordinatesEuclidean, g=None, f=None, with_time=True):
         if not f:
             f = np.zeros(len(self))
         if not g:
@@ -146,16 +146,15 @@ class RoadMap:
         opened = [self.st]
 
         current = None
-        t = time.time()
+        if with_time:
+            t = time.time()
         while len(opened) > 0 and current is not self.end:
             current = heapq.heappop(opened)
-            closed.append(current)
+            # closed.append(current)
             neighbors = self[current, None]
             t_f = 0
             nx = current
             for ne in neighbors:
-                if ne in closed:
-                    continue
                 h[self.nodes == ne] = h1 = heuristic_function(self.fromOsPoint_to_tuple(ne),
                                                               self.fromOsPoint_to_tuple(self.end))
 
@@ -173,7 +172,8 @@ class RoadMap:
             heapq.heappush(opened, candidate)
             path.append((current, candidate))
 
-        print(f'time of work for A* = {time.time() - t}')
+        if with_time:
+            print(f'time of work for A* = {time.time() - t}')
         print(f'total cost = {np.sum(f[np.isin(self.nodes, path)])}')
         return path
 
