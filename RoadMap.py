@@ -1,9 +1,8 @@
 import osmnx as ox
 import networkx as nx
-import os
 import time
 import numpy as np
-from numpy import deg2rad, cos, sin, inf, random
+from numpy import deg2rad, cos, sin, inf
 import matplotlib.pyplot as plt
 import heapq
 
@@ -88,8 +87,10 @@ class RoadMap:
         n1, n2 = args
 
         def NoneCase(n3):  # returns each of n3's neighbors
-            nei = nx.all_neighbors(self.G, n3)
-            return np.unique(list(nei))
+            # nei = nx.all_neighbors(self.G, n3)
+            nei = self.edges[:, 0] == n3
+            nei = self.edges[nei][:, 1]
+            return np.unique(nei)
 
         if n1 is None:
             return NoneCase(n2)
@@ -109,8 +110,8 @@ class RoadMap:
 
         if cond1.sum() > 0:
             return self.edges[cond1][:, 2][0]
-        elif cond2.sum() > 0:
-            return self.edges[cond2][:, 2][0]
+        # elif cond2.sum() > 0:
+        #    return self.edges[cond2][:, 2][0]
 
         return inf
 
@@ -169,7 +170,7 @@ class RoadMap:
             print('There is no path')
             return []
 
-    def __AStar(self, heuristic_function=calcEuclideanDistanceOnEarth, g=None, f=None, with_time=True):
+    def __AStar(self, heuristic_function=calcEuclideanDistanceOnEarth, g=None, f=None, with_time=True, with_vis=False):
         if not f:
             f = np.zeros(len(self))
         if not g:
@@ -185,8 +186,10 @@ class RoadMap:
         opened = [self.start]
         steps = 0
         current = None
-        if with_time:
-            t = time.time()
+        t = time.time()
+        if with_vis:
+            plt.figure()
+            plt.ion()
         while len(opened) > 0 and current is not self.end:
             current = heapq.heappop(opened)
             steps += 1
@@ -202,19 +205,29 @@ class RoadMap:
             if cond.sum() == 0:
                 print('There is no path')
                 return []
+
             minF = np.min(f[cond])
             candidate = self.nodes[cond][f[cond] == minF][0]
+
             if (self.end in neighbors) and (f[self.nodes == self.end][0] == minF):
-                candidate = self.end
+                path.append((current, self.end))
+                current = self.end
+                if with_vis:
+                    self.plot(show=True, path=path)
+                continue
+
             heapq.heappush(opened, candidate)
             path.append((current, candidate))
+            if with_vis:
+                self.plot(show=False, path=path)
+                plt.pause(0.01)
 
         if with_time:
             print(f'time of work for A* = {time.time() - t}')
         print(f'total steps = {steps}')
         return path
 
-    def applyAlgorithm(self, algorithm, heuristic_function=calcEuclideanDistanceOnEarth) -> list:
+    def applyAlgorithm(self, algorithm, heuristic_function=calcEuclideanDistanceOnEarth, with_viz=False) -> list:
         """
         :param algorithm: the wanted algorithm to apply on the graph, in order to find the shortest path from start
         to end.
@@ -223,7 +236,7 @@ class RoadMap:
         """
 
         if algorithm == 0:
-            return self.__AStar(heuristic_function)
+            return self.__AStar(heuristic_function, with_vis=with_viz)
 
         else:
             return self.__Dijkstra()
@@ -232,7 +245,7 @@ class RoadMap:
         paths = np.repeat('royalblue', len(self.edges))
 
         if path is not None:
-            if len(path) > 0:
+            if len(path) > 0 and show:
                 plt.plot([0], [0], label='path', c='gold')
             for v, u in path:
                 cond = (self.edges[:, 0] == v) & (self.edges[:, 1] == u)
@@ -242,16 +255,18 @@ class RoadMap:
         colors = np.repeat('black', len(self.G))
         colors[self.nodes == self.start] = 'lime'
         colors[self.nodes == self.end] = 'r'
-        plt.plot([0], [0], label='start', c='lime')
-        plt.plot([0], [0], label='goal', c='r')
-        plt.plot([0], [0], label='nodes', c='black')
+
         ox.plot_graph(self.G, node_color=colors, bgcolor='cornsilk', edge_color=paths,
                       edge_linewidth=3, edge_alpha=1, ax=plt.gca(), show=False)
-        plt.legend(shadow=True, fancybox=True, edgecolor='gold', facecolor='wheat')
         if show:
+            plt.ioff()
+            plt.plot([0], [0], label='start', c='lime')
+            plt.plot([0], [0], label='goal', c='r')
+            plt.plot([0], [0], label='nodes', c='black')
+            plt.legend(shadow=True, fancybox=True, edgecolor='gold', facecolor='wheat')
             plt.show()
 
 
 rm = RoadMap((32.0141, 34.7736), (32.0184, 34.7761))
-p = rm.applyAlgorithm(0, calcEuclideanDistanceOnEarth)
-rm.plot(path=p)
+p = rm.applyAlgorithm(0, calcEuclideanDistanceOnEarth, with_viz=True)
+#rm.plot(path=p)
