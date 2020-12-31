@@ -57,6 +57,7 @@ class RoadMap:
         self.end = ox.get_nearest_node(self.G, end)
         self.nodes = np.array(list(self.G.nodes))
         self.edges = np.array(list(self.G.edges))
+
         w = np.zeros(self.edges.shape[0])
         for u, v, d in self.G.edges(data=True):
             try:
@@ -203,7 +204,7 @@ class RoadMap:
                 paths[cond] = 'gold'
 
         colors = np.repeat('indigo', len(self.G))
-        colors[self.nodes == self.st] = 'lime'
+        colors[self.nodes == self.start] = 'lime'
         colors[self.nodes == self.end] = 'r'
         plt.plot([0], [0], label='start', c='lime')
         plt.plot([0], [0], label='goal', c='r')
@@ -215,6 +216,6 @@ class RoadMap:
             plt.show()
 
 
-rr = RoadMap((32.0141, 34.7736), (32.0183, 34.7761))
-p = rr.applyAlgorithm(0, heuristic_function=CoordinatesManhattan)
-rr.plot(path=p)
+rm = RoadMap((32.0141, 34.7736), (32.0183, 34.7761))
+p = rm.applyAlgorithm(0, heuristic_function=calcManhattanDistanceOnEarth)
+rm.plot(path=p)
