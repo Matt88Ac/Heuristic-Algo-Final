@@ -259,6 +259,6 @@ class RoadMap:
             plt.show()
 
 
-rm = RoadMap((32.0141, 34.7736), (32.0183, 34.7761))
-p = rm.applyAlgorithm(1, calcManhattanDistanceOnEarth)
+rm = RoadMap((32.0141, 34.7736), (32.0184, 34.7761))
+p = rm.applyAlgorithm(0, calcEuclideanDistanceOnEarth)
 rm.plot(path=p)
