@@ -126,7 +126,52 @@ class RoadMap:
         pass
 
     def __Dijkstra(self):
-        pass
+        opened = [self.start]
+        closed = []
+        steps = 0
+        distances = np.ones(len(self.nodes)) * inf
+        current = self.start
+
+        distances[self.nodes == self.start] = 0
+
+        t = time.time()
+        parents = np.zeros_like(self.nodes)
+
+        while len(opened) > 0 and current != self.end:
+            current = opened[0]
+            opened.pop(0)
+            closed.append(current)
+            neighbors = self[current, None]
+            steps += 1
+            curr_dist = distances[self.nodes == current]
+
+            for neighbor in neighbors:
+                w = self[current, neighbor]
+                if current == self.start:
+                    distances[self.nodes == neighbor] = w + curr_dist
+                    parents[self.nodes == neighbor] = current
+                else:
+                    if w + curr_dist < distances[self.nodes == neighbor][0]:
+                        distances[self.nodes == neighbor] = w + curr_dist
+                        parents[self.nodes == neighbor] = current
+
+                if neighbor not in closed:
+                    opened.append(neighbor)
+
+        if current == self.end:
+            print(f'number of steps = {steps}')
+            print(f'time of work for Dijkstra = {time.time() - t}')
+            prev = parents[self.nodes == self.end][0]
+            path = [(prev, self.end)]
+            while prev != self.start:
+                last = parents[self.nodes == prev][0]
+                path.append((last, prev))
+                prev = last
+            return path[::-1]
+
+        else:
+            print('There is no path')
+            return []
 
     def __AStar(self, heuristic_function=calcEuclideanDistanceOnEarth, g=None, f=None, with_time=True):
         if not f:
@@ -142,16 +187,14 @@ class RoadMap:
 
         closed = []
         opened = [self.start]
-
+        steps = 0
         current = None
         if with_time:
             t = time.time()
         while len(opened) > 0 and current is not self.end:
             current = heapq.heappop(opened)
-            # closed.append(current)
+            steps += 1
             neighbors = self[current, None]
-            t_f = 0
-            nx = current
             for ne in neighbors:
                 h[self.nodes == ne] = h1 = heuristic_function(self.fromOsPoint_to_tuple(ne),
                                                               self.fromOsPoint_to_tuple(self.end))
@@ -172,7 +215,7 @@ class RoadMap:
 
         if with_time:
             print(f'time of work for A* = {time.time() - t}')
-        print(f'total cost = {np.sum(f[np.isin(self.nodes, path)])}')
+        print(f'total steps = {steps}')
         return path
 
     def __PRM(self):
@@ -192,6 +235,8 @@ class RoadMap:
         else:
             return self.algorithms[0](heuristic_function)
 
+        return self.algorithms[algorithm]()
+
     def plot(self, show=True, path=None):
         paths = np.repeat('royalblue', len(self.edges))
 
@@ -203,12 +248,12 @@ class RoadMap:
                 cond += (self.edges[:, 1] == v) & (self.edges[:, 0] == u)
                 paths[cond] = 'gold'
 
-        colors = np.repeat('indigo', len(self.G))
+        colors = np.repeat('black', len(self.G))
         colors[self.nodes == self.start] = 'lime'
         colors[self.nodes == self.end] = 'r'
         plt.plot([0], [0], label='start', c='lime')
         plt.plot([0], [0], label='goal', c='r')
-        plt.plot([0], [0], label='nodes', c='indigo')
+        plt.plot([0], [0], label='nodes', c='black')
         ox.plot_graph(self.G, node_color=colors, bgcolor='cornsilk', edge_color=paths,
                       edge_linewidth=3, edge_alpha=1, ax=plt.gca(), show=False)
         plt.legend(shadow=True, fancybox=True, edgecolor='gold', facecolor='wheat')
@@ -217,5 +262,5 @@ class RoadMap:
 
 
 rm = RoadMap((32.0141, 34.7736), (32.0183, 34.7761))
-p = rm.applyAlgorithm(0, heuristic_function=calcManhattanDistanceOnEarth)
+p = rm.applyAlgorithm(1)
 rm.plot(path=p)
