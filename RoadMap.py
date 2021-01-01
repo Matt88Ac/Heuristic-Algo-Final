@@ -270,9 +270,6 @@ class RoadMap:
                 self.plot(show=False, path=path)
                 plt.pause(0.01)
 
-        print(f'time of work for A* = {time.time() - t}')
-        print(f'total steps = {steps}')
-        print('final path =', path)
         return path, time.time() - t, steps
 
     def applyAlgorithm(self, algorithm, heuristic_function=calcGreatCircleDistanceOnEarth, with_viz=False) -> list:
