@@ -303,7 +303,8 @@ class RoadMap:
         if path is not None:
             if len(path) > 0 and show:
                 if ax:
-                    ax.plot([0], [0], label='path', c='gold')
+                    plt.plot([0], [0], label='path', c='gold')
+
                 else:
                     plt.plot([0], [0], label='path', c='gold')
 
@@ -345,4 +346,8 @@ class RoadMap:
             plt.ioff()
 
             plt.show()
+
+
+rm = RoadMap((32.0141, 34.7736), (32.0184, 34.7761))
+#rm.applyAlgorithm(0, heuristic_function=calcManhattanDistanceOnEarth)
 
