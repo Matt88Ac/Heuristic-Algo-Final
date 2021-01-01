@@ -79,7 +79,7 @@ class RoadMap:
 
     def __init__(self, start: Union[tuple, str], end: Union[tuple, str], network_type='walk', graph_type='points'):
         if graph_type == 'points':
-            self.dist = int(calcGreatCircleDistanceOnEarth(start, end) + SIGHT_RADIUS_ADDITION)
+            self.dist = int(calcManhattanDistanceOnEarth(start, end) + SIGHT_RADIUS_ADDITION)
             self.G = ox.graph_from_point(start, dist=self.dist, network_type=network_type)
 
         else:

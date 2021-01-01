@@ -16,7 +16,7 @@ mpl.use("TkAgg")
 style.use('ggplot')
 
 root = tk.Tk()
-
+root.iconbitmap(default='icon.ico')
 
 def on_closing():
     if messagebox.askokcancel("Quit", "Do you want to quit?"):
@@ -146,7 +146,11 @@ class OurApp(tk.Frame):
         if self.path is not None:
             self.ax.set_title(f'time of work = {np.round(self.time, 4)}(s), total steps = {self.steps}')
 
-        self.graph.plot(path=self.path, ax=self.ax, show=False)
+        try:
+            self.graph.plot(path=self.path, ax=self.ax, show=False)
+
+        except TypeError:
+            self.ax.set_title('No graph to show.')
 
     def __ApplySettings(self):
         label = tk.Label(self, text='Real World Path Finder')
