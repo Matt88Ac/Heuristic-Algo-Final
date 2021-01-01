@@ -6,7 +6,8 @@ import numpy as np
 from RoadMap import RoadMap, calcChebyshevDistanceOnEarth, calcEuclideanDistanceOnEarth, calcGreatCircleDistanceOnEarth
 from RoadMap import calcManhattanDistanceOnEarth, calcOctileDistanceOnEarth
 from matplotlib.figure import Figure
-import copy
+from matplotlib import style
+style.use('ggplot')
 
 root = tk.Tk()
 
@@ -17,6 +18,7 @@ class OurApp(tk.Frame):
         super().__init__(master)
         self.master = master
         self.pack()
+        self.winfo_toplevel().title("Final Project in Heuristic and Approximation Algorithms")
         self.path = None
         self.button1 = None
         self.button2 = None
@@ -95,13 +97,15 @@ class OurApp(tk.Frame):
     def show(self):
         if self.plotter:
             self.plotter.get_tk_widget().pack_forget()
+
         self.Figure = Figure(dpi=100)
-        self.ax = self.Figure.add_subplot(111)
+        self.ax: plt.Axes = self.Figure.add_subplot(111)
 
         self.plotter = FigureCanvasTkAgg(self.Figure, self)
         self.plotter.get_tk_widget().pack()
 
-        self.ax.set_title(f'time of work = {np.round(self.time, 4)}(s), total steps = {self.steps}')
+        if self.path is not None:
+            self.ax.set_title(f'time of work = {np.round(self.time, 4)}(s), total steps = {self.steps}')
 
         self.graph.plot(path=self.path, ax=self.ax, show=False)
 
@@ -136,7 +140,7 @@ class OurApp(tk.Frame):
         label.config(font=('Arial', 9))
         self.canvas1.create_window(245, 100, window=label)
 
-        label = tk.Label(self, text='Starting Coordinate')
+        label = tk.Label(self, text='Start Coordinate')
         label.config(font=('Arial', 9))
         self.canvas1.create_window(400, 80, window=label)
 
