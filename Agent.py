@@ -8,15 +8,13 @@ from RoadMap import calcManhattanDistanceOnEarth, calcOctileDistanceOnEarth
 from matplotlib.figure import Figure
 import matplotlib as mpl
 from matplotlib import style
-import osmnx as ox
-
-
 
 mpl.use("TkAgg")
 style.use('ggplot')
 
 root = tk.Tk()
 root.iconbitmap(default='icon.ico')
+
 
 def on_closing():
     if messagebox.askokcancel("Quit", "Do you want to quit?"):
