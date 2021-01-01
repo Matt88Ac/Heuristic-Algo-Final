@@ -9,7 +9,7 @@ EARTH_RADIUS = 6371 * 10 ** 3  # Earth radius [M]
 SIGHT_RADIUS_ADDITION = 10  # The addition to the radius between the user's start and stop points [M]
 
 
-# Calculates Euclidean distance between two coordinates on earth
+# Calculates the distance between two coordinates on earth (a sphere)
 def calcGreatCircleDistanceOnEarth(c1: tuple, c2: tuple) -> float:
     lat1, lon1 = c1
     lat2, lon2 = c2
@@ -44,7 +44,7 @@ def calcEuclideanDistanceOnEarth(c1: tuple, c2: tuple):
         c = 2 * np.arctan2(a ** 0.5, (1 - a) ** 0.5)
         return EARTH_RADIUS * c
 
-    return np.sqrt(getR(lat1, lat2)**2 + getR(lon1, lon2)**2)
+    return np.sqrt(getR(lat1, lat2) ** 2 + getR(lon1, lon2) ** 2)
 
 
 def calcChebyshevDistanceOnEarth(c1: tuple, c2: tuple):
@@ -71,7 +71,7 @@ def calcOctileDistanceOnEarth(c1: tuple, c2: tuple):
     mx = max(getR(lat1, lat2), getR(lon1, lon2))
     mn = min(getR(lat1, lat2), getR(lon1, lon2))
 
-    return (np.sqrt(2) - 1)*mn + mx
+    return (np.sqrt(2) - 1) * mn + mx
 
 
 class RoadMap:
@@ -205,21 +205,19 @@ class RoadMap:
                     opened.append(neighbor)
 
         if current == self.end:
-            print(f'number of steps = {steps}')
-            print(f'time of work for Dijkstra = {time.time() - t}')
             prev = parents[self.nodes == self.end][0]
             path = [(prev, self.end)]
             while prev != self.start:
                 last = parents[self.nodes == prev][0]
                 path.append((last, prev))
                 prev = last
-            return path[::-1]
+            return path[::-1], time.time() - t, steps
 
         else:
             print('There is no path')
             return []
 
-    def __AStar(self, heuristic_function=calcGreatCircleDistanceOnEarth, with_time=True, with_vis=False):
+    def __AStar(self, heuristic_function=calcGreatCircleDistanceOnEarth, with_vis=False):
         f = np.zeros(len(self))
         g: np.ndarray = np.zeros(len(self))
         h: np.ndarray = f.copy()
@@ -272,11 +270,10 @@ class RoadMap:
                 self.plot(show=False, path=path)
                 plt.pause(0.01)
 
-        if with_time:
-            print(f'time of work for A* = {time.time() - t}')
+        print(f'time of work for A* = {time.time() - t}')
         print(f'total steps = {steps}')
         print('final path =', path)
-        return path
+        return path, time.time() - t, steps
 
     def applyAlgorithm(self, algorithm, heuristic_function=calcGreatCircleDistanceOnEarth, with_viz=False) -> list:
         """
@@ -319,16 +316,22 @@ class RoadMap:
         else:
             ox.plot_graph(self.G, node_color=colors, edge_color=paths,
                           edge_linewidth=3, edge_alpha=1, ax=ax, show=False)
-
-        if show:
-            plt.ioff()
+        if not ax:
             plt.plot([0], [0], label='start', c='lime')
             plt.plot([0], [0], label='goal', c='r')
             plt.plot([0], [0], label='nodes', c='black')
             plt.legend(shadow=True, fancybox=True, edgecolor='gold', facecolor='wheat')
+        else:
+            ax.plot([0], [0], label='start', c='lime')
+            ax.plot([0], [0], label='goal', c='r')
+            ax.plot([0], [0], label='nodes', c='black')
+            ax.legend(shadow=True, fancybox=True, edgecolor='gold', facecolor='wheat')
+
+        if show:
+            plt.ioff()
+
             plt.show()
 
-
-rm = RoadMap((32.0141, 34.7736), (32.0184, 34.7761))
-p = rm.applyAlgorithm(0, calcEuclideanDistanceOnEarth)
-rm.plot(path=p)
+# rm = RoadMap((32.0141, 34.7736), (32.0184, 34.7761))
+# p = rm.applyAlgorithm(0, calcEuclideanDistanceOnEarth)
+# rm.plot(path=p)
