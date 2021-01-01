@@ -85,7 +85,7 @@ class OurApp(tk.Frame):
         label.config(font=('Arial', 9))
         self.canvas1.create_window(750, 70, window=label)
 
-        label = tk.Label(self, text='Metric:')
+        label = tk.Label(self, text='Metric Space:')
         label.config(font=('Arial', 9))
         self.canvas1.create_window(650, 190, window=label)
 
