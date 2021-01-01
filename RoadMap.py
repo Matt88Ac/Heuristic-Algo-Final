@@ -291,7 +291,10 @@ class RoadMap:
 
         if path is not None:
             if len(path) > 0 and show:
-                plt.plot([0], [0], label='path', c='gold')
+                if ax:
+                    ax.plot([0], [0], label='path', c='gold')
+                else:
+                    plt.plot([0], [0], label='path', c='gold')
             for v, u in path:
                 cond = (self.edges[:, 0] == v) & (self.edges[:, 1] == u)
                 cond += (self.edges[:, 1] == v) & (self.edges[:, 0] == u)
