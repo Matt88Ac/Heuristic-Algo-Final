@@ -4,9 +4,10 @@ import time
 import numpy as np
 from numpy import deg2rad, cos, sin, inf
 import matplotlib.pyplot as plt
+from typing import Union
 
 EARTH_RADIUS = 6371 * 10 ** 3  # Earth radius [M]
-SIGHT_RADIUS_ADDITION = 10  # The addition to the radius between the user's start and stop points [M]
+SIGHT_RADIUS_ADDITION = -10  # The addition to the radius between the user's start and stop points [M]
 
 
 # Calculates the distance between two coordinates on earth (a sphere)
@@ -76,9 +77,17 @@ def calcOctileDistanceOnEarth(c1: tuple, c2: tuple):
 
 class RoadMap:
 
-    def __init__(self, start: tuple, end: tuple, network_type='walk'):
-        self.dist = int(calcGreatCircleDistanceOnEarth(start, end) + SIGHT_RADIUS_ADDITION)
-        self.G = ox.graph_from_point(start, dist=self.dist, network_type=network_type)
+    def __init__(self, start: Union[tuple, str], end: Union[tuple, str], network_type='walk', graph_type='points'):
+        if graph_type == 'points':
+            self.dist = int(calcGreatCircleDistanceOnEarth(start, end) + SIGHT_RADIUS_ADDITION)
+            self.G = ox.graph_from_point(start, dist=self.dist, network_type=network_type)
+
+        else:
+            g1, start = ox.graph_from_address(start, 20, return_coords=True)
+            g2, end = ox.graph_from_address(end, 20, return_coords=True)
+            self.dist = int(calcGreatCircleDistanceOnEarth(start, end) + SIGHT_RADIUS_ADDITION)
+            self.G = ox.graph_from_point(start, dist=self.dist, network_type=network_type)
+
         self.start = ox.get_nearest_node(self.G, start)
         self.end = ox.get_nearest_node(self.G, end)
         self.nodes = np.array(list(self.G.nodes))
@@ -92,6 +101,8 @@ class RoadMap:
                 lanes = 1
 
             except TypeError:
+                lanes = max(int(d['lanes'][0]), 1)
+            except ValueError:
                 lanes = max(int(d['lanes'][0]), 1)
 
             wt = 1 / lanes + 2 * int(d['oneway'])
@@ -295,6 +306,9 @@ class RoadMap:
                     ax.plot([0], [0], label='path', c='gold')
                 else:
                     plt.plot([0], [0], label='path', c='gold')
+
+            if not show and ax:
+                ax.plot([0], [0], label='path', c='gold')
             for v, u in path:
                 cond = (self.edges[:, 0] == v) & (self.edges[:, 1] == u)
                 cond += (self.edges[:, 1] == v) & (self.edges[:, 0] == u)
@@ -332,6 +346,3 @@ class RoadMap:
 
             plt.show()
 
-# rm = RoadMap((32.0141, 34.7736), (32.0184, 34.7761))
-# p = rm.applyAlgorithm(0, calcEuclideanDistanceOnEarth)
-# rm.plot(path=p)
