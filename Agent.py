@@ -6,7 +6,9 @@ import numpy as np
 from RoadMap import RoadMap, calcChebyshevDistanceOnEarth, calcEuclideanDistanceOnEarth, calcGreatCircleDistanceOnEarth
 from RoadMap import calcManhattanDistanceOnEarth, calcOctileDistanceOnEarth
 from matplotlib.figure import Figure
+import matplotlib as mpl
 from matplotlib import style
+mpl.use("TkAgg")
 style.use('ggplot')
 
 root = tk.Tk()
