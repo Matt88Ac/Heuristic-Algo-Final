@@ -57,7 +57,7 @@ class RoadMap:
         self.nodes = np.array(list(self.G.nodes))
         self.edges = np.array(list(self.G.edges), dtype=float)
 
-        w = np.ones(self.edges.shape[0], dtype=float)*inf
+        w = np.ones(self.edges.shape[0], dtype=float) * inf
         for u, v, d in self.G.edges(data=True):
             try:
                 lanes = max(int(d['lanes']), 1)
@@ -236,7 +236,7 @@ class RoadMap:
         else:
             return self.__Dijkstra()
 
-    def plot(self, show=True, path=None):
+    def plot(self, show=True, path=None, ax=None):
         paths = np.repeat('royalblue', len(self.edges))
 
         if path is not None:
@@ -251,11 +251,12 @@ class RoadMap:
         colors[self.nodes == self.start] = 'lime'
         colors[self.nodes == self.end] = 'r'
 
-        ox.plot_graph(self.G, node_color=colors, edge_color=paths,
-                      edge_linewidth=3, edge_alpha=1, ax=plt.gca(), show=False)
-
-        # ax = plt.axes()
-        # ax.set_facecolor("lightcoral")
+        if not ax:
+            ox.plot_graph(self.G, node_color=colors, edge_color=paths,
+                          edge_linewidth=3, edge_alpha=1, ax=plt.gca(), show=False)
+        else:
+            ox.plot_graph(self.G, node_color=colors, edge_color=paths,
+                          edge_linewidth=3, edge_alpha=1, ax=ax, show=False)
 
         if show:
             plt.ioff()
@@ -267,5 +268,5 @@ class RoadMap:
 
 
 rm = RoadMap((32.0141, 34.7736), (32.0184, 34.7761))
-p = rm.applyAlgorithm(1, calcEuclideanDistanceOnEarth)
+p = rm.applyAlgorithm(0, calcChebyshevDistanceOnEarth)
 rm.plot(path=p)
