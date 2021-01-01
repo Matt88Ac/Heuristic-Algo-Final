@@ -10,7 +10,7 @@ SIGHT_RADIUS_ADDITION = 10  # The addition to the radius between the user's star
 
 
 # Calculates Euclidean distance between two coordinates on earth
-def calcEuclideanDistanceOnEarth(c1: tuple, c2: tuple) -> float:
+def calcGreatCircleDistanceOnEarth(c1: tuple, c2: tuple) -> float:
     lat1, lon1 = c1
     lat2, lon2 = c2
 
@@ -35,6 +35,18 @@ def calcManhattanDistanceOnEarth(c1: tuple, c2: tuple):
     return getR(lat1, lat2) + getR(lon1, lon2)
 
 
+def calcEuclideanDistanceOnEarth(c1: tuple, c2: tuple):
+    lat1, lon1 = c1
+    lat2, lon2 = c2
+
+    def getR(x0, x1):
+        a = sin(deg2rad(abs(x0 - x1)) / 2) ** 2
+        c = 2 * np.arctan2(a ** 0.5, (1 - a) ** 0.5)
+        return EARTH_RADIUS * c
+
+    return np.sqrt(getR(lat1, lat2)**2 + getR(lon1, lon2)**2)
+
+
 def calcChebyshevDistanceOnEarth(c1: tuple, c2: tuple):
     lat1, lon1 = c1
     lat2, lon2 = c2
@@ -47,10 +59,25 @@ def calcChebyshevDistanceOnEarth(c1: tuple, c2: tuple):
     return max(getR(lat1, lat2), getR(lon1, lon2))
 
 
+def calcOctileDistanceOnEarth(c1: tuple, c2: tuple):
+    lat1, lon1 = c1
+    lat2, lon2 = c2
+
+    def getR(x0, x1):
+        a = sin(deg2rad(abs(x0 - x1)) / 2) ** 2
+        c = 2 * np.arctan2(a ** 0.5, (1 - a) ** 0.5)
+        return EARTH_RADIUS * c
+
+    mx = max(getR(lat1, lat2), getR(lon1, lon2))
+    mn = min(getR(lat1, lat2), getR(lon1, lon2))
+
+    return (np.sqrt(2) - 1)*mn + mx
+
+
 class RoadMap:
 
     def __init__(self, start: tuple, end: tuple, network_type='walk'):
-        self.dist = int(calcEuclideanDistanceOnEarth(start, end) + SIGHT_RADIUS_ADDITION)
+        self.dist = int(calcGreatCircleDistanceOnEarth(start, end) + SIGHT_RADIUS_ADDITION)
         self.G = ox.graph_from_point(start, dist=self.dist, network_type=network_type)
         self.start = ox.get_nearest_node(self.G, start)
         self.end = ox.get_nearest_node(self.G, end)
@@ -80,6 +107,8 @@ class RoadMap:
         self.coordinates = self.coordinates[self.nodes.argsort()]
         self.nodes.sort()
         self.pos = nx.spring_layout(self.G)
+
+        self.blocked = []
 
     def __getitem__(self, *args):
         args = args[0]
@@ -112,6 +141,32 @@ class RoadMap:
     # Returns the number of vertices in the graph G
     def __len__(self):
         return len(self.G)
+
+    def blockRoad(self, u, v):
+        cond = self.edges[:, 0] == u
+        cond &= self.edges[:, 1] == v
+
+        if cond.sum() == 0:
+            return False
+
+        self.blocked.append((u, v, self.edges[cond][:, 2][0]))
+        self.edges[cond] = np.array([u, v, inf])
+        return True
+
+    def openRoad(self, u, v):
+        cond = self.edges[:, 0] == u
+        cond &= self.edges[:, 1] == v
+
+        if cond.sum() == 0 or len(self.blocked) == 0:
+            return False
+
+        for uu, vv, w in self.blocked:
+            if uu == u and vv == v:
+                self.edges[cond] = np.array([u, v, w])
+                self.blocked.remove((uu, vv, w))
+                return True
+
+        return False
 
     def fromOsPoint_to_tuple(self, pt) -> tuple:  # translates the node's name to a coordinate
         return self.coordinates[self.nodes == pt][0][0], self.coordinates[self.nodes == pt][0][1]
@@ -164,7 +219,7 @@ class RoadMap:
             print('There is no path')
             return []
 
-    def __AStar(self, heuristic_function=calcEuclideanDistanceOnEarth, with_time=True, with_vis=False):
+    def __AStar(self, heuristic_function=calcGreatCircleDistanceOnEarth, with_time=True, with_vis=False):
         f = np.zeros(len(self))
         g: np.ndarray = np.zeros(len(self))
         h: np.ndarray = f.copy()
@@ -220,9 +275,10 @@ class RoadMap:
         if with_time:
             print(f'time of work for A* = {time.time() - t}')
         print(f'total steps = {steps}')
+        print('final path =', path)
         return path
 
-    def applyAlgorithm(self, algorithm, heuristic_function=calcEuclideanDistanceOnEarth, with_viz=False) -> list:
+    def applyAlgorithm(self, algorithm, heuristic_function=calcGreatCircleDistanceOnEarth, with_viz=False) -> list:
         """
         :param algorithm: the wanted algorithm to apply on the graph, in order to find the shortest path from start
         to end.
@@ -247,6 +303,12 @@ class RoadMap:
                 cond += (self.edges[:, 1] == v) & (self.edges[:, 0] == u)
                 paths[cond] = 'gold'
 
+        if len(self.blocked) > 0:
+            for u, v, w in self.blocked:
+                cond = (self.edges[:, 0] == v) & (self.edges[:, 1] == u)
+                cond += (self.edges[:, 1] == v) & (self.edges[:, 0] == u)
+                paths[cond] = 'darkred'
+
         colors = np.repeat('black', len(self.G))
         colors[self.nodes == self.start] = 'lime'
         colors[self.nodes == self.end] = 'r'
@@ -268,5 +330,5 @@ class RoadMap:
 
 
 rm = RoadMap((32.0141, 34.7736), (32.0184, 34.7761))
-p = rm.applyAlgorithm(0, calcChebyshevDistanceOnEarth)
+p = rm.applyAlgorithm(0, calcEuclideanDistanceOnEarth)
 rm.plot(path=p)
