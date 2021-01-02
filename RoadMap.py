@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from typing import Union
 
 EARTH_RADIUS = 6371 * 10 ** 3  # Earth radius [M]
-SIGHT_RADIUS_ADDITION = -10  # The addition to the radius between the user's start and stop points [M]
+SIGHT_RADIUS_ADDITION = 100  # The addition to the radius between the user's start and stop points [M]
 
 
 # Calculates the distance between two coordinates on earth (a sphere)
@@ -77,9 +77,9 @@ def calcOctileDistanceOnEarth(c1: tuple, c2: tuple):
 
 class RoadMap:
 
-    def __init__(self, start: Union[tuple, str], end: Union[tuple, str], network_type='walk', graph_type='points'):
+    def __init__(self, start: Union[tuple, str], end: Union[tuple, str], network_type='drive', graph_type='points'):
         if graph_type == 'points':
-            self.dist = int(calcManhattanDistanceOnEarth(start, end) + SIGHT_RADIUS_ADDITION)
+            self.dist = int(calcGreatCircleDistanceOnEarth(start, end) + SIGHT_RADIUS_ADDITION)
             self.G = ox.graph_from_point(start, dist=self.dist, network_type=network_type)
 
         else:
@@ -88,25 +88,24 @@ class RoadMap:
             self.dist = int(calcGreatCircleDistanceOnEarth(start, end) + SIGHT_RADIUS_ADDITION)
             self.G = ox.graph_from_point(start, dist=self.dist, network_type=network_type)
 
+        self.G = ox.add_edge_speeds(self.G, hwy_speeds={'motorway': 130, 'trunk': 110, 'primary': 70,
+                                                        'secondary': 50, 'tertiary': 50, 'unclassified': 30,
+                                                        'residential': 30, 'steps': 0, 'trunk_link': 70,
+                                                        'motorway_link': 70, 'primary_link': 40,
+                                                        'secondary_link': 20, 'tertiary_link': 20, 'service': 10,
+                                                        'living_street': 20}, fallback=1)
+        self.G = ox.add_edge_travel_times(self.G)
+
         self.start = ox.get_nearest_node(self.G, start)
         self.end = ox.get_nearest_node(self.G, end)
+
         self.nodes = np.array(list(self.G.nodes))
         self.edges = np.array(list(self.G.edges), dtype=float)
 
         w = np.ones(self.edges.shape[0], dtype=float) * inf
         for u, v, d in self.G.edges(data=True):
-            try:
-                lanes = max(int(d['lanes']), 1)
-            except KeyError:
-                lanes = 1
+            w[(self.edges[:, 0] == u) & (self.edges[:, 1] == v)] = d['travel_time']
 
-            except TypeError:
-                lanes = max(int(d['lanes'][0]), 1)
-            except ValueError:
-                lanes = max(int(d['lanes'][0]), 1)
-
-            wt = 1 / lanes + 2 * int(d['oneway'])
-            w[(self.edges[:, 0] == u) & (self.edges[:, 1] == v)] = wt
         self.edges[:, 2] = w.copy()
 
         data = self.G.nodes(data=True)
@@ -126,10 +125,7 @@ class RoadMap:
         n1, n2 = args
 
         def NoneCase(n3):  # returns each of n3's neighbors
-            # nei = nx.all_neighbors(self.G, n3)
-            nei = self.edges[:, 0] == n3
-            nei = self.edges[nei][:, 1]
-            return np.unique(nei)
+            return np.array(list(nx.neighbors(self.G, n3)))
 
         if n1 is None:
             return NoneCase(n2)
@@ -183,7 +179,8 @@ class RoadMap:
         return self.coordinates[self.nodes == pt][0][0], self.coordinates[self.nodes == pt][0][1]
 
     def __Dijkstra(self):
-        opened = [self.start]
+        opened = np.array([self.start])
+        ww = np.array([0])
         closed = []
         steps = 0
         distances = np.ones(len(self.nodes)) * inf
@@ -196,11 +193,12 @@ class RoadMap:
 
         while len(opened) > 0 and current != self.end:
             current = opened[0]
-            opened.pop(0)
+            ww = ww[opened != current]
+            opened = opened[opened != current]
             closed.append(current)
             neighbors = self[current, None]
             steps += 1
-            curr_dist = distances[self.nodes == current]
+            curr_dist = distances[self.nodes == current][0]
 
             for neighbor in neighbors:
                 w = self[current, neighbor]
@@ -211,9 +209,14 @@ class RoadMap:
                     if w + curr_dist < distances[self.nodes == neighbor][0]:
                         distances[self.nodes == neighbor] = w + curr_dist
                         parents[self.nodes == neighbor] = current
+                        if neighbor in opened:
+                            ww[opened == neighbor] = w + curr_dist
 
                 if neighbor not in closed:
-                    opened.append(neighbor)
+                    opened = np.append(opened, neighbor)
+                    ww = np.append(ww, distances[self.nodes == neighbor][0])
+                    opened = opened[ww.argsort()]
+                    ww.sort()
 
         if current == self.end:
             prev = parents[self.nodes == self.end][0]
@@ -225,21 +228,30 @@ class RoadMap:
             return path[::-1], time.time() - t, steps
 
         else:
+            prev = parents[self.nodes == current][0]
+            path = [(prev, current)]
             print('There is no path')
-            return []
+            while prev != self.start:
+                last = parents[self.nodes == prev][0]
+                path.append((last, prev))
+                prev = last
+            return path[::-1], 0, 0
 
     def __AStar(self, heuristic_function=calcGreatCircleDistanceOnEarth, with_vis=False):
-        f = np.zeros(len(self))
+        f = np.ones(len(self)) * inf
         g: np.ndarray = np.zeros(len(self))
-        h: np.ndarray = f.copy()
+        h: np.ndarray = g.copy()
+
+        parents = np.zeros_like(self.nodes)
 
         h[self.nodes == self.start] = heuristic_function(self.fromOsPoint_to_tuple(self.start),
                                                          self.fromOsPoint_to_tuple(self.end))
         f[self.nodes == self.start] = h[self.nodes == self.start][0]
-        path = []
 
         closed = []
-        opened = [self.start]
+        opened = np.array([self.start])
+        wt = np.array([0])
+
         steps = 0
         current = None
         t = time.time()
@@ -250,40 +262,62 @@ class RoadMap:
 
         while len(opened) > 0 and current is not self.end:
             current = opened[0]
-            opened.pop(0)
+            if current == self.end:
+                t = time.time() - t
+                break
+            wt = wt[opened != current]
+            opened = opened[opened != current]
+            closed.append(current)
+
             steps += 1
             neighbors = self[current, None]
+
             for ne in neighbors:
-                h[self.nodes == ne] = h1 = heuristic_function(self.fromOsPoint_to_tuple(ne),
-                                                              self.fromOsPoint_to_tuple(self.end))
+                h1 = heuristic_function(self.fromOsPoint_to_tuple(ne),
+                                        self.fromOsPoint_to_tuple(self.end))
 
-                g[self.nodes == ne] = g1 = self[current, ne]
+                g[self.nodes == ne] = g1 = self[current, ne] + g[self.nodes == current][0]
+                if ne in closed and f[self.nodes == ne][0] > h1 + g1:
+                    closed.remove(ne)
+                elif ne in closed and f[self.nodes == ne][0] <= h1 + g1:
+                    continue
+
+                parents[self.nodes == ne] = current
+                h[self.nodes == ne] = h1
                 f[self.nodes == ne] = h1 + g1
+                wt = np.append(wt, h1 + g1)
+                opened = np.append(opened, ne)
 
-            cond = np.isin(self.nodes, neighbors) & (~np.isin(self.nodes, closed))
-            if cond.sum() == 0:
-                print('There is no path')
-                return []
+            opened = opened[wt.argsort()]
+            wt.sort()
 
-            minF = np.min(f[cond])
-            candidate = self.nodes[cond][f[cond] == minF][0]
+        # minF = np.min(f[cond])
+        # candidate = self.nodes[cond][f[cond] == minF][0]
+        #
+        # if (self.end in neighbors) and (f[self.nodes == self.end][0] == minF):
+        #     path.append((current, self.end))
+        #     current = self.end
+        #     if with_vis:
+        #         self.plot(show=True, path=path)
+        #     continue
+        #
+        # path.append((current, candidate))
+        # if with_vis:
+        #     self.plot(show=False, path=path)
+        #     plt.pause(0.01)
+        if current == self.end:
+            prev = parents[self.nodes == self.end][0]
+            path = [(prev, self.end)]
+            while prev != self.start:
+                last = parents[self.nodes == prev][0]
+                path.append((last, prev))
+                prev = last
+            return path[::-1], t, steps
+        else:
+            print('There is no path')
+            return [], 0, 0
 
-            if (self.end in neighbors) and (f[self.nodes == self.end][0] == minF):
-                path.append((current, self.end))
-                current = self.end
-                if with_vis:
-                    self.plot(show=True, path=path)
-                continue
-
-            opened.append(candidate)
-            path.append((current, candidate))
-            if with_vis:
-                self.plot(show=False, path=path)
-                plt.pause(0.01)
-
-        return path, time.time() - t, steps
-
-    def applyAlgorithm(self, algorithm, heuristic_function=calcGreatCircleDistanceOnEarth, with_viz=False) -> list:
+    def applyAlgorithm(self, algorithm, heuristic_function=calcGreatCircleDistanceOnEarth, with_viz=False) -> tuple:
         """
         :param algorithm: the wanted algorithm to apply on the graph, in order to find the shortest path from start
         to end.
@@ -347,4 +381,8 @@ class RoadMap:
             plt.show()
 
 
-
+rm = RoadMap((32.0142, 34.7736), (32.0184, 34.7761))
+p, ti, st = rm.applyAlgorithm(0, calcGreatCircleDistanceOnEarth)
+print(ti)
+print(st)
+rm.plot(path=p)
