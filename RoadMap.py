@@ -381,8 +381,57 @@ class RoadMap:
             plt.show()
 
 
-rm = RoadMap((32.0142, 34.7736), (32.0184, 34.7761))
-p, ti, st = rm.applyAlgorithm(0, calcGreatCircleDistanceOnEarth)
-print(ti)
-print(st)
-rm.plot(path=p)
+
+#data = np.zeros((30, len(cols)), dtype=object)
+#
+#metric_spaces = [calcGreatCircleDistanceOnEarth, calcEuclideanDistanceOnEarth, calcManhattanDistanceOnEarth,
+#                 calcOctileDistanceOnEarth, calcChebyshevDistanceOnEarth]
+#
+#
+#examples = [((32.0142, 34.7736), (32.0184, 34.7761)), ((32.0234, 34.7761), (32.0295, 34.7701)),
+#            ((32.0136, 34.7761), (32.0194, 34.7732)), ((32.0144, 34.7711), (32.0184, 34.7767)),
+#            ((32.0184, 34.7741), (32.0132, 34.7793))]
+#
+#spot = 0
+#for i, example in enumerate(examples):
+#    xx, yy = example
+#    dist = calcGreatCircleDistanceOnEarth(xx, yy)
+#    graph = RoadMap(xx, yy)
+#
+#    for j in range(2):
+#        if j == 0:
+#            for k in range(len(names_metric)):
+#                metric = metric_spaces[k]
+#                name = names_metric[k]
+#                p, ti, st = graph.applyAlgorithm(0, metric)
+#                data[spot, 0] = dist
+#                data[spot, 1] = ti
+#                data[spot, 2] = st
+#                data[spot, 3] = 'A*'
+#                data[spot, 4] = name
+#                spot += 1
+#
+#        else:
+#            p, ti, st = graph.applyAlgorithm(1, calcGreatCircleDistanceOnEarth)
+#            data[spot, 0] = dist
+#            data[spot, 1] = ti
+#            data[spot, 2] = st
+#            data[spot, 3] = 'Dijkstra'
+#            data[spot, 4] = 'H(x, y)=0'
+#            spot += 1
+#
+#    print('done')
+#
+#import pandas as pd
+#data = pd.DataFrame(data, columns=cols)
+#data.to_csv('our_data.csv')
+
+# a = (32.0142, 34.7736)
+# b = (32.0184, 34.7761)
+#
+# rm = RoadMap(a, b)
+
+# p, ti, st = rm.applyAlgorithm(0, calcGreatCircleDistanceOnEarth)
+# print(ti)
+# print(st)
+# rm.plot(path=p)
