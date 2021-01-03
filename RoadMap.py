@@ -291,20 +291,6 @@ class RoadMap:
             opened = opened[wt.argsort()]
             wt.sort()
 
-        # minF = np.min(f[cond])
-        # candidate = self.nodes[cond][f[cond] == minF][0]
-        #
-        # if (self.end in neighbors) and (f[self.nodes == self.end][0] == minF):
-        #     path.append((current, self.end))
-        #     current = self.end
-        #     if with_vis:
-        #         self.plot(show=True, path=path)
-        #     continue
-        #
-        # path.append((current, candidate))
-        # if with_vis:
-        #     self.plot(show=False, path=path)
-        #     plt.pause(0.01)
         if current == self.end:
             prev = parents[self.nodes == self.end][0]
             path = [(prev, self.end)]
@@ -312,13 +298,27 @@ class RoadMap:
                 last = parents[self.nodes == prev][0]
                 path.append((last, prev))
                 prev = last
-            return path[::-1], t, steps
+
+            path = path[::-1]
+
+            if with_vis:
+                t_path = []
+                for edge in path:
+                    t_path.append(edge)
+                    if t_path[-1] != path[-1]:
+                        self.plot(show=False, path=t_path)
+                    else:
+                        self.plot(show=True, path=t_path)
+                    plt.pause(0.03)
+
+            return path, t, steps
         else:
             print('There is no path')
             return [], 0, 0
 
     def applyAlgorithm(self, algorithm, heuristic_function=calcGreatCircleDistanceOnEarth, with_viz=False) -> tuple:
         """
+        :param with_viz: Whether or not show the process.
         :param algorithm: the wanted algorithm to apply on the graph, in order to find the shortest path from start
         to end.
         Could be one of 'A*'=0, 'Dijkstra'=1.
@@ -381,19 +381,40 @@ class RoadMap:
             plt.show()
 
 
-
-#data = np.zeros((30, len(cols)), dtype=object)
+#data = np.zeros((6, 3), dtype=object)
+#graph = RoadMap((32.0191, 34.7822), (32.0147, 34.7976))
 #
 #metric_spaces = [calcGreatCircleDistanceOnEarth, calcEuclideanDistanceOnEarth, calcManhattanDistanceOnEarth,
 #                 calcOctileDistanceOnEarth, calcChebyshevDistanceOnEarth]
+#sns.set_style("dark")
+#
+#order = ['Dijkstra', '$A^*$ - Sphere', '$A^*$ - Euclidean', '$A^*$ - Manhattan', '$A^*$ - Octile', '$A^*$ - Chebyshev']
+#for i in range(6):
+#    data[i, 2] = order[i]
+#    if i == 0:
+#        p, data[0, 0], data[0, 1] = graph.applyAlgorithm(1)
+#    else:
+#        p, data[i, 0], data[i, 1] = graph.applyAlgorithm(0, metric_spaces[i-1])
+#
+#import pandas as pd
+#data = pd.DataFrame(data, columns=['Time(s)', 'NoSteps', 'Algorithm'])
+#plt.subplot(1, 2, 1)
+#sns.barplot(x='Algorithm', y="Time(s)", data=data, ax=plt.gca())
+#plt.subplot(1, 2, 2)
+#sns.barplot(x='Algorithm', y="NoSteps", data=data, ax=plt.gca())
+#plt.show()
+
+# data = np.zeros((30, len(cols)), dtype=object)
+#
+
 #
 #
-#examples = [((32.0142, 34.7736), (32.0184, 34.7761)), ((32.0234, 34.7761), (32.0295, 34.7701)),
+# examples = [((32.0142, 34.7736), (32.0184, 34.7761)), ((32.0234, 34.7761), (32.0295, 34.7701)),
 #            ((32.0136, 34.7761), (32.0194, 34.7732)), ((32.0144, 34.7711), (32.0184, 34.7767)),
 #            ((32.0184, 34.7741), (32.0132, 34.7793))]
 #
-#spot = 0
-#for i, example in enumerate(examples):
+# spot = 0
+# for i, example in enumerate(examples):
 #    xx, yy = example
 #    dist = calcGreatCircleDistanceOnEarth(xx, yy)
 #    graph = RoadMap(xx, yy)
@@ -422,15 +443,15 @@ class RoadMap:
 #
 #    print('done')
 #
-#import pandas as pd
-#data = pd.DataFrame(data, columns=cols)
-#data.to_csv('our_data.csv')
+# import pandas as pd
+# data = pd.DataFrame(data, columns=cols)
+# data.to_csv('our_data.csv')
 
 # a = (32.0142, 34.7736)
 # b = (32.0184, 34.7761)
 #
 # rm = RoadMap(a, b)
-
+#
 # p, ti, st = rm.applyAlgorithm(0, calcGreatCircleDistanceOnEarth)
 # print(ti)
 # print(st)
