@@ -5,7 +5,7 @@ import numpy as np
 from numpy import deg2rad, cos, sin, inf
 import matplotlib.pyplot as plt
 from typing import Union
-
+from shapely.geometry.linestring import LineString
 EARTH_RADIUS = 6371 * 10 ** 3  # Earth radius [M]
 SIGHT_RADIUS_ADDITION = 100  # The addition to the radius between the user's start and stop points [M]
 
@@ -149,6 +149,23 @@ class RoadMap:
     def __len__(self):
         return len(self.G)
 
+    def getName_and_Spot(self, u, v):
+        data = self.G[u][v]
+        try:
+            name = data[0]['name'][::-1]
+        except KeyError:
+            name = ''
+
+        if type(name) == list:
+            name = name[0][::-1]
+        try:
+            spot: LineString = data[0]['geometry']
+            spot = spot.centroid
+        except KeyError:
+            return None, None, None
+
+        return name, spot.x, spot.y
+
     def blockRoad(self, u, v):
         cond = self.edges[:, 0] == u
         cond &= self.edges[:, 1] == v
@@ -218,14 +235,17 @@ class RoadMap:
                     opened = opened[ww.argsort()]
                     ww.sort()
 
+        w = 0
         if current == self.end:
             prev = parents[self.nodes == self.end][0]
             path = [(prev, self.end)]
+            w = self[prev, self.end]
             while prev != self.start:
                 last = parents[self.nodes == prev][0]
                 path.append((last, prev))
+                w += self[last, prev]
                 prev = last
-            return path[::-1], time.time() - t, steps
+            return path[::-1], time.time() - t, steps, w
 
         else:
             prev = parents[self.nodes == current][0]
@@ -235,7 +255,7 @@ class RoadMap:
                 last = parents[self.nodes == prev][0]
                 path.append((last, prev))
                 prev = last
-            return path[::-1], 0, 0
+            return path[::-1], 0, 0, w
 
     def __AStar(self, heuristic_function=calcGreatCircleDistanceOnEarth, with_vis=False):
         f = np.ones(len(self)) * inf
@@ -291,12 +311,15 @@ class RoadMap:
             opened = opened[wt.argsort()]
             wt.sort()
 
+        wt = 0
         if current == self.end:
             prev = parents[self.nodes == self.end][0]
             path = [(prev, self.end)]
+            wt = self[prev, self.end]
             while prev != self.start:
                 last = parents[self.nodes == prev][0]
                 path.append((last, prev))
+                wt += self[last, prev]
                 prev = last
 
             path = path[::-1]
@@ -311,7 +334,7 @@ class RoadMap:
                         self.plot(show=True, path=t_path)
                     plt.pause(0.03)
 
-            return path, t, steps
+            return path, t, steps, wt
         else:
             print('There is no path')
             return [], 0, 0
@@ -333,6 +356,17 @@ class RoadMap:
 
     def plot(self, show=True, path=None, ax=None):
         paths = np.repeat('royalblue', len(self.edges))
+
+        if ax:
+            for u, v in self.edges[:, :2]:
+                name, x, y = self.getName_and_Spot(u, v)
+                if name is not None:
+                    ax.annotate(name, (x, y), c='brown', fontsize=5)
+        else:
+            for u, v in self.edges[:, :2]:
+                name, x, y = self.getName_and_Spot(u, v)
+                if name is not None:
+                    plt.annotate(name, (x, y), c='brown', fontsize=5)
 
         if path is not None:
             if len(path) > 0 and show:
@@ -381,68 +415,73 @@ class RoadMap:
             plt.show()
 
 
-#data = np.zeros((6, 3), dtype=object)
-#graph = RoadMap((32.0191, 34.7822), (32.0147, 34.7976))
+graph = RoadMap((32.0191, 34.7822), (32.0147, 34.7976))
+graph.plot()
+# data = np.zeros((6, 3), dtype=object)
 #
-#metric_spaces = [calcGreatCircleDistanceOnEarth, calcEuclideanDistanceOnEarth, calcManhattanDistanceOnEarth,
+# metric_spaces = [calcGreatCircleDistanceOnEarth, calcEuclideanDistanceOnEarth, calcManhattanDistanceOnEarth,
 #                 calcOctileDistanceOnEarth, calcChebyshevDistanceOnEarth]
-#sns.set_style("dark")
+## sns.set_style("dark")
+# cols = ['Sphere Distance', 'Time(s)', 'Number of Steps', 'Algorithm', 'Metric Space',
+#        'Total Path Weight', 'Network Type']
 #
-#order = ['Dijkstra', '$A^*$ - Sphere', '$A^*$ - Euclidean', '$A^*$ - Manhattan', '$A^*$ - Octile', '$A^*$ - Chebyshev']
-#for i in range(6):
-#    data[i, 2] = order[i]
-#    if i == 0:
-#        p, data[0, 0], data[0, 1] = graph.applyAlgorithm(1)
-#    else:
-#        p, data[i, 0], data[i, 1] = graph.applyAlgorithm(0, metric_spaces[i-1])
+## order = ['Dijkstra', '$A^*$ - Sphere', '$A^*$ - Euclidean', '$A^*$ - Manhattan', '$A^*$ - Octile',
+## '$A^*$ - Chebyshev'] for i in range(6): data[i, 2] = order[i] if i == 0: p, data[0, 0], data[0,
+## 1] = graph.applyAlgorithm(1) else: p, data[i, 0], data[i, 1] = graph.applyAlgorithm(0, metric_spaces[i-1])
+##
+## import pandas as pd
+## data = pd.DataFrame(data, columns=['Time(s)', 'NoSteps', 'Algorithm'])
+## plt.subplot(1, 2, 1)
+## sns.barplot(x='Algorithm', y="Time(s)", data=data, ax=plt.gca())
+## plt.subplot(1, 2, 2)
+## sns.barplot(x='Algorithm', y="NoSteps", data=data, ax=plt.gca())
+## plt.show()
 #
-#import pandas as pd
-#data = pd.DataFrame(data, columns=['Time(s)', 'NoSteps', 'Algorithm'])
-#plt.subplot(1, 2, 1)
-#sns.barplot(x='Algorithm', y="Time(s)", data=data, ax=plt.gca())
-#plt.subplot(1, 2, 2)
-#sns.barplot(x='Algorithm', y="NoSteps", data=data, ax=plt.gca())
-#plt.show()
-
-# data = np.zeros((30, len(cols)), dtype=object)
+# data = np.zeros((60, len(cols)), dtype=object)
+##
+# names_metric = ['Sphere', 'Euclidean', 'Manhattan', 'Octile', 'Chebyshev']
 #
-
-#
-#
+##
+##
 # examples = [((32.0142, 34.7736), (32.0184, 34.7761)), ((32.0234, 34.7761), (32.0295, 34.7701)),
 #            ((32.0136, 34.7761), (32.0194, 34.7732)), ((32.0144, 34.7711), (32.0184, 34.7767)),
 #            ((32.0184, 34.7741), (32.0132, 34.7793))]
 #
 # spot = 0
 # for i, example in enumerate(examples):
-#    xx, yy = example
-#    dist = calcGreatCircleDistanceOnEarth(xx, yy)
-#    graph = RoadMap(xx, yy)
+#    for net_type in ['drive', 'bike']:
+#        xx, yy = example
+#        dist = calcGreatCircleDistanceOnEarth(xx, yy)
+#        graph = RoadMap(xx, yy, network_type=net_type)
 #
-#    for j in range(2):
-#        if j == 0:
-#            for k in range(len(names_metric)):
-#                metric = metric_spaces[k]
-#                name = names_metric[k]
-#                p, ti, st = graph.applyAlgorithm(0, metric)
+#        for j in range(2):
+#            if j == 0:
+#                for k in range(len(names_metric)):
+#                    metric = metric_spaces[k]
+#                    name = names_metric[k]
+#                    p, ti, st, w = graph.applyAlgorithm(0, metric)
+#                    data[spot, 0] = dist
+#                    data[spot, 1] = ti
+#                    data[spot, 2] = st
+#                    data[spot, 3] = 'A*'
+#                    data[spot, 4] = name
+#                    data[spot, 5] = w
+#                    data[spot, 6] = net_type
+#                    spot += 1
+#
+#            else:
+#                p, ti, st, w = graph.applyAlgorithm(1, calcGreatCircleDistanceOnEarth)
 #                data[spot, 0] = dist
 #                data[spot, 1] = ti
 #                data[spot, 2] = st
-#                data[spot, 3] = 'A*'
-#                data[spot, 4] = name
+#                data[spot, 3] = 'Dijkstra'
+#                data[spot, 4] = 'H(x, y)=0'
+#                data[spot, 5] = w
+#                data[spot, 6] = net_type
 #                spot += 1
 #
-#        else:
-#            p, ti, st = graph.applyAlgorithm(1, calcGreatCircleDistanceOnEarth)
-#            data[spot, 0] = dist
-#            data[spot, 1] = ti
-#            data[spot, 2] = st
-#            data[spot, 3] = 'Dijkstra'
-#            data[spot, 4] = 'H(x, y)=0'
-#            spot += 1
-#
-#    print('done')
-#
+#        print('done')
+##
 # import pandas as pd
 # data = pd.DataFrame(data, columns=cols)
 # data.to_csv('our_data.csv')
