@@ -17,6 +17,7 @@ IS_NAMING_ON = True
 # Global variables
 sight_radius = SIGHT_RADIUS_ADDITION
 
+
 # Calculates the distance between two coordinates on earth (a sphere)
 def calcGreatCircleDistanceOnEarth(c1: tuple, c2: tuple) -> float:
     lat1, lon1 = c1
@@ -374,7 +375,7 @@ class RoadMap:
         else:
             return self.__Dijkstra()
 
-    def show_graph(self, route=None, fig=None, ax=None):
+    def show_graph(self, route=None, ax=None, other_data: tuple = None):
         global sight_radius
 
         g_nodes = self.G.nodes(data=True)
@@ -383,17 +384,28 @@ class RoadMap:
         src_coordinate = ((g_nodes[self.start])['x'], (g_nodes[self.start])['y'])
         dst_coordinate = ((g_nodes[self.end])['x'], (g_nodes[self.end])['y'])
         sight_radius = int(calcGreatCircleDistanceOnEarth(src_coordinate, dst_coordinate) + SIGHT_RADIUS_ADDITION)
+        fig, ax = plt.subplots(1, 1)
+        paths = np.repeat('black', len(self.edges))
+        lw = np.repeat(0.4, len(self.edges))
+        if route:
+            for v, u in route:
+                cond = (self.edges[:, 0] == v) & (self.edges[:, 1] == u)
+                cond += (self.edges[:, 1] == v) & (self.edges[:, 0] == u)
+                paths[cond] = 'y'
+                lw[cond] = 6
 
-        if route is not None:
-            fig, ax = ox.plot_graph_route(self.G, route, route_color='y', route_linewidth=6, node_size=4, edge_linewidth=0.4,
-                                          node_color='#006666', bgcolor='white',
-                                          show=False, close=False)
-        else:
-            fig, ax = ox.plot_graph(self.G, node_size=4, edge_linewidth=0.4, node_color='#006666', bgcolor='white',
-                                    show=False, close=False)
+        # if route is not None:
+        #    ox.plot_graph_route(self.G, route, route_color='y', route_linewidth=6, node_size=4, edge_linewidth=0.4,
+        #                        node_color='#006666', bgcolor='white',
+        #                        show=False, close=False, ax=ax)
+        # else:
+        ox.plot_graph(self.G, node_size=4, edge_linewidth=lw, node_color='#006666', bgcolor='white',
+                      show=False, ax=ax, edge_color=paths)
 
         ax.scatter((g_nodes[self.start])['x'], (g_nodes[self.start])['y'], c='r', s=60, marker='.')
         ax.scatter((g_nodes[self.end])['x'], (g_nodes[self.end])['y'], c='orange', s=60, marker='*')
+        if other_data:
+            ax.set_title(f'time of work = {np.round(other_data[0], 4)}(s), total steps = {other_data[1]}')
 
         origin_high = ax.get_xlim()[1] - ax.get_xlim()[0]
         origin_width = ax.get_ylim()[1] - ax.get_ylim()[0]
