@@ -6,6 +6,7 @@ from numpy import deg2rad, cos, sin, inf
 import matplotlib.pyplot as plt
 from typing import Union
 from shapely.geometry.linestring import LineString
+
 EARTH_RADIUS = 6371 * 10 ** 3  # Earth radius [M]
 SIGHT_RADIUS_ADDITION = 100  # The addition to the radius between the user's start and stop points [M]
 
