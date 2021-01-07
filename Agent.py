@@ -36,6 +36,8 @@ class OurApp(tk.Frame):
         self.button1 = None
         self.button2 = None
         # self.button3 = None
+        self.label_time = None
+        self.label_error = None
 
         self.canvas1 = tk.Canvas(self, width=800, height=400)
         self.canvas1.pack()
@@ -44,7 +46,8 @@ class OurApp(tk.Frame):
         self.button4 = None
         self.button5 = None
         self.button6 = None
-        self.plotter = None
+        self.fig = None
+        self.ax = None
 
         self.defAlgorithms()
 
@@ -125,30 +128,20 @@ class OurApp(tk.Frame):
             self.defAlgorithms()
             self.create_widgets()
             self.__ApplySettings()
-        if self.plotter:
-            self.plotter.get_tk_widget().pack_forget()
+        if self.fig is not None:
+            # TODO: close figure, clean lable_time and lable error
+            pass
+        self.fig = None
+        self.ax = None
         self.path = None
-        self.Figure = Figure(figsize=(6, 6), dpi=100)
-        self.ax = self.Figure.add_subplot(111)
 
     def show(self):
-        if self.plotter:
-            self.plotter.get_tk_widget().pack_forget()
-
-        self.Figure = Figure(figsize=(6, 6), dpi=100)
-        self.ax: plt.Axes = self.Figure.add_subplot(111)
-
-        self.plotter = FigureCanvasTkAgg(self.Figure, self)
-        self.plotter.get_tk_widget().pack()
-
         if self.path is not None:
-            self.ax.set_title(f'time of work = {np.round(self.time, 4)}(s), total steps = {self.steps}')
-
+            self.label_time.set_text(f'time of work = {np.round(self.time, 4)}(s), total steps = {self.steps}')
         try:
-            self.graph.plot(path=self.path, ax=self.ax, show=False)
-
+            self.fig, self.ax = self.graph.show_graph(route=self.path)
         except TypeError:
-            self.ax.set_title('No graph to show.')
+            self.label_error.set_text('No graph to show')
 
     def __ApplySettings(self):
         label = tk.Label(self, text='Shortest Path Finder On Earth')
@@ -158,19 +151,27 @@ class OurApp(tk.Frame):
             self.latlon1 = tk.StringVar(self)
             self.latlon0 = tk.StringVar(self)
 
-            entery = tk.Entry(self, textvariable=self.latlon1)
+            entery = tk.Entry(self, textvariable=self.latlon0)
             self.canvas1.create_window(400, 180, window=entery, width=250)
 
-            entery = tk.Entry(self, textvariable=self.latlon0)
+            entery = tk.Entry(self, textvariable=self.latlon1)
             self.canvas1.create_window(400, 230, window=entery, width=250)
+
+            label = tk.Label(self, text='Start Coordinate: lat,lon')
+            label.config(font=('Arial', 9))
+            self.canvas1.create_window(400, 160, window=label)
 
             label = tk.Label(self, text='Goal Coordinate: lat,lon')
             label.config(font=('Arial', 9))
             self.canvas1.create_window(400, 210, window=label)
 
-            label = tk.Label(self, text='Start Coordinate: lat,lon')
-            label.config(font=('Arial', 9))
-            self.canvas1.create_window(400, 160, window=label)
+            self.label_time = tk.Label(self, text=f'time of work = ?(s), total steps = ?')
+            self.label_time.config(font=('Arial', 9))
+            self.canvas1.create_window(400, 280, window=self.label_time)
+
+            self.label_error = tk.Label(self, text='')
+            self.label_error.config(font=('Arial', 9))
+            self.canvas1.create_window(400, 310, window=self.label_error)
 
         else:
             self.address1 = tk.StringVar(self)

@@ -6,10 +6,16 @@ from numpy import deg2rad, cos, sin, inf
 import matplotlib.pyplot as plt
 from typing import Union
 from shapely.geometry.linestring import LineString
+import matplotlib
 
+# Global constants
 EARTH_RADIUS = 6371 * 10 ** 3  # Earth radius [M]
 SIGHT_RADIUS_ADDITION = 100  # The addition to the radius between the user's start and stop points [M]
+NAMES_RATIO = 5  # if edge length is at least sight_radius/NAMES_RATIO it will have a name, don't put 0
+IS_NAMING_ON = True
 
+# Global variables
+sight_radius = SIGHT_RADIUS_ADDITION
 
 # Calculates the distance between two coordinates on earth (a sphere)
 def calcGreatCircleDistanceOnEarth(c1: tuple, c2: tuple) -> float:
@@ -74,6 +80,19 @@ def calcOctileDistanceOnEarth(c1: tuple, c2: tuple):
     mn = min(getR(lat1, lat2), getR(lon1, lon2))
 
     return (np.sqrt(2) - 1) * mn + mx
+
+
+def move_figure(f, x, y):
+    """Move figure's upper left corner to pixel (x, y)"""
+    backend = matplotlib.get_backend()
+    if backend == 'TkAgg':
+        f.canvas.manager.window.wm_geometry("+%d+%d" % (x, y))
+    elif backend == 'WXAgg':
+        f.canvas.manager.window.SetPosition((x, y))
+    else:
+        # This works for QT and GTK
+        # You can also use window.setGeometry
+        f.canvas.manager.window.move(x, y)
 
 
 class RoadMap:
@@ -355,6 +374,73 @@ class RoadMap:
         else:
             return self.__Dijkstra()
 
+    def show_graph(self, route=None, fig=None, ax=None):
+        global sight_radius
+
+        g_nodes = self.G.nodes(data=True)
+
+        # build location by coordinates
+        src_coordinate = ((g_nodes[self.start])['x'], (g_nodes[self.start])['y'])
+        dst_coordinate = ((g_nodes[self.end])['x'], (g_nodes[self.end])['y'])
+        sight_radius = int(calcGreatCircleDistanceOnEarth(src_coordinate, dst_coordinate) + SIGHT_RADIUS_ADDITION)
+
+        if route is not None:
+            fig, ax = ox.plot_graph_route(self.G, route, route_color='y', route_linewidth=6, node_size=4, edge_linewidth=0.4,
+                                          node_color='#006666', bgcolor='white',
+                                          show=False, close=False)
+        else:
+            fig, ax = ox.plot_graph(self.G, node_size=4, edge_linewidth=0.4, node_color='#006666', bgcolor='white',
+                                    show=False, close=False)
+
+        ax.scatter((g_nodes[self.start])['x'], (g_nodes[self.start])['y'], c='r', s=60, marker='.')
+        ax.scatter((g_nodes[self.end])['x'], (g_nodes[self.end])['y'], c='orange', s=60, marker='*')
+
+        origin_high = ax.get_xlim()[1] - ax.get_xlim()[0]
+        origin_width = ax.get_ylim()[1] - ax.get_ylim()[0]
+        origin_area = origin_high * origin_width
+        area_rel = 1
+        annotations = []
+
+        def add_annotations():
+            unique_collection = set()
+            for _, edge in ox.graph_to_gdfs(self.G, nodes=False).fillna('').iterrows():
+                try:
+                    edge['name'] = edge['name'] if type(edge['name']) == str else edge['name'][0]
+                except:
+                    edge['name'] = ''
+                # print(edge['length'])
+                if edge['length'] >= sight_radius / (NAMES_RATIO / area_rel):
+                    if edge['name'] not in unique_collection:
+                        unique_collection.add(edge['name'])
+                        text = edge['name']
+                        c = edge['geometry'].centroid
+                        ann = ax.annotate(text[::-1], (c.x, c.y), c='black', size=8)
+                        annotations.append(ann)
+
+        def zoom_changed(event):
+            nonlocal area_rel
+            nonlocal annotations
+
+            for ann in annotations:
+                ann.remove()
+            annotations.clear()
+
+            current_high = ax.get_xlim()[1] - ax.get_xlim()[0]
+            current_width = ax.get_ylim()[1] - ax.get_ylim()[0]
+            area_rel = (current_high * current_width) / origin_area
+            add_annotations()
+
+        if IS_NAMING_ON:
+            add_annotations()
+            ax.callbacks.connect('xlim_changed', zoom_changed)
+            ax.callbacks.connect('ylim_changed', zoom_changed)
+
+        fig.set_figheight(6)
+        fig.set_figwidth(9)
+        move_figure(fig, 0, 0)
+        plt.show()
+        return fig, ax
+
     def plot(self, show=True, path=None, ax=None):
         paths = np.repeat('royalblue', len(self.edges))
 
@@ -415,9 +501,8 @@ class RoadMap:
             plt.ioff()
             plt.show()
 
-
-graph = RoadMap((32.0191, 34.7822), (32.0147, 34.7976))
-graph.plot()
+# graph = RoadMap((32.0191, 34.7822), (32.0147, 34.7976))
+# graph.plot()
 # data = np.zeros((6, 3), dtype=object)
 #
 # metric_spaces = [calcGreatCircleDistanceOnEarth, calcEuclideanDistanceOnEarth, calcManhattanDistanceOnEarth,
