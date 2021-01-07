@@ -2,27 +2,32 @@ import pandas as pd
 from matplotlib import pyplot as plt
 import numpy as np
 from matplotlib import style
+import seaborn as sns
 
 style.use('ggplot')
 
 data = pd.read_csv('our_data.csv')
 names_metric = ['Sphere', 'Euclidean', 'Manhattan', 'Octile', 'Chebyshev']
-cols = ['Sphere Distance', 'Time(s)', 'Number of Steps', 'Algorithm', 'Metric Space']
+cols = ['Sphere Distance', 'Time(s)', 'Number of Steps', 'Algorithm', 'Metric Space',
+        'Total Path Weight', 'Network Type']
 
-plt.ylabel('Time(s)')
-plt.xlabel('$d(p_1, p_2)$')
+# data = data.loc[data['Metric Space'] != 'H(x, y)=0', :]
+
 points = np.unique(data['Sphere Distance'])
-x = []
-y = []
+#xx = []
+#for p in points:
+#    for way in ['drive', 'bike']:
+#        to_calc = data.loc[(data['Sphere Distance'] == p) & (data['Network Type'] == way), :]
+#        w = to_calc.loc[to_calc['Algorithm'] != 'A*', 'Total Path Weight'].to_numpy(dtype=float)[0]
+#        to_calc = np.abs(to_calc.loc[:, 'Total Path Weight'].to_numpy(dtype=float) - w)
+#        xx.extend(to_calc.tolist())
+#
+#data['Precision'] = xx
 
-for point in points:
-    df = data.loc[data['Sphere Distance'] == point, :]
-    x.append(np.mean(df.loc[df['Algorithm'] == 'A*', 'Time(s)']))
-    y.append(np.mean(df.loc[df['Algorithm'] == 'Dijkstra', 'Time(s)']))
+#plt.ylabel('Error')
+#plt.xlabel('$d(p_1, p_2)$')
+#plt.title('Error: Comparing between heuristic functions for $A^*$')
 
-plt.title('Time(s): $A^*$ vs. Dijkstra')
-plt.plot(points, x, label='$A^*$')
-plt.plot(points, y, label='Dijkstra')
+# data = data.loc[data['Algorithm'] != 'Dijkstra']
+#sns.catplot(x='Metric Space', y='Number of Steps', data=data, col='Network Type', hue='Sphere Distance', kind='bar')
 
-plt.legend()
-plt.show()
