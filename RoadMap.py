@@ -116,8 +116,16 @@ class RoadMap:
                                                         'living_street': 20}, fallback=1)
         self.G = ox.add_edge_travel_times(self.G)
 
+        g_nodes = self.G.nodes(data=True)
+
         self.start = ox.get_nearest_node(self.G, start)
         self.end = ox.get_nearest_node(self.G, end)
+
+        print('\n-- Notice that requested coordinates are')
+        print('---- src =', start, ', dst =', end)
+        print('-- Actual coordinate are')
+        print('---- src =', (g_nodes[self.start]['y'], g_nodes[self.start]['x']),
+              ', dst =', (g_nodes[self.end]['y'], g_nodes[self.end]['x']), '\n')
 
         self.nodes = np.array(list(self.G.nodes))
         self.edges = np.array(list(self.G.edges), dtype=float)
