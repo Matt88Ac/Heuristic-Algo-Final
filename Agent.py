@@ -37,7 +37,8 @@ class OurApp(tk.Frame):
         self.button2 = None
         # self.button3 = None
         self.label_time = None
-        self.label_error = None
+        self.label_error = tk.Label(self, text='No graph to show', width=15)
+        self.label_error.config(font=('Arial', 16))
 
         self.canvas1 = tk.Canvas(self, width=800, height=400)
         self.canvas1.pack()
@@ -128,20 +129,21 @@ class OurApp(tk.Frame):
             self.defAlgorithms()
             self.create_widgets()
             self.__ApplySettings()
-        if self.fig is not None:
-            # TODO: close figure, clean lable_time and lable error
-            pass
+
+        plt.close('all')
         self.fig = None
         self.ax = None
         self.path = None
 
     def show(self):
+        other_data = None
         if self.path is not None:
-            self.label_time.set_text(f'time of work = {np.round(self.time, 4)}(s), total steps = {self.steps}')
+            other_data = (self.time, self.steps)
         try:
-            self.fig, self.ax = self.graph.show_graph(route=self.path)
+            plt.close('all')
+            self.graph.show_graph(route=self.path, other_data=other_data)
         except TypeError:
-            self.label_error.set_text('No graph to show')
+            pass
 
     def __ApplySettings(self):
         label = tk.Label(self, text='Shortest Path Finder On Earth')
@@ -237,7 +239,9 @@ class OurApp(tk.Frame):
         elif dist == 'Octile':
             dist = calcOctileDistanceOnEarth
 
-        self.path, self.time, self.steps = self.graph.applyAlgorithm(which, dist)
+        self.path, self.time, self.steps, _ = self.graph.applyAlgorithm(which, dist)
+        #if self.path and len(self.path) > 0:
+        self.show()
 
 
 app = OurApp(root)
@@ -247,4 +251,4 @@ app.mainloop()
 # 34.7736
 # 32.0184
 # 34.7761
-# (32.0184, 34.7741), (32.0132, 34.7793)
+# 32.0184,34.7741 32.0132,34.7793
