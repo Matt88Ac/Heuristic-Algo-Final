@@ -35,9 +35,9 @@ class OurApp(tk.Frame):
         self.path = None
         self.button1 = None
         self.button2 = None
-        self.button3 = None
+        # self.button3 = None
 
-        self.canvas1 = tk.Canvas(self, width=800, height=300)
+        self.canvas1 = tk.Canvas(self, width=800, height=400)
         self.canvas1.pack()
         self.getter = 'points'
 
@@ -53,25 +53,25 @@ class OurApp(tk.Frame):
         self.graph = RoadMap
 
     def create_widgets(self):
-        self.button1 = tk.Button(self, text='  Set Road  ', command=self.__setWorld, bg='palegreen2',
-                                 font=('Arial', 11, 'bold'))
-        self.canvas1.create_window(70, 40, window=self.button1)
+        self.button1 = tk.Button(self, text='  Set Graph  ', command=self.__setWorld, bg='lightsteelblue2',
+                                 font=('Arial', 11, 'bold'), width=15)
+        self.canvas1.create_window(100, 120, window=self.button1)
 
-        self.button2 = tk.Button(self, text='Apply Algorithm', command=self.applyAlgorithm, bg='gold2',
-                                 font=('Arial', 11, 'bold'))
-        self.canvas1.create_window(70, 90, window=self.button2)
+        self.button2 = tk.Button(self, text='Apply Algorithm', command=self.applyAlgorithm, bg='lightsteelblue2',
+                                 font=('Arial', 11, 'bold'), width=15)
+        self.canvas1.create_window(100, 170, window=self.button2)
 
-        self.button3 = tk.Button(self, text='  Plot Graph  ', command=self.show, bg='lightsteelblue2',
-                                 font=('Arial', 11, 'bold'))
-        self.canvas1.create_window(70, 140, window=self.button3)
+        # self.button3 = tk.Button(self, text='  Show Graph  ', command=self.show, bg='lightsteelblue2',
+        #                          font=('Arial', 11, 'bold'), width=15)
+        # self.canvas1.create_window(100, 220, window=self.button3)
 
-        self.button4 = tk.Button(self, text='  Clear Graph  ', command=self.__clearWorld, bg='plum4',
-                                 font=('Arial', 11, 'bold'))
-        self.canvas1.create_window(70, 190, window=self.button4)
+        self.button4 = tk.Button(self, text='  Clear Graph  ', command=self.__clearWorld, bg='lightsteelblue2',
+                                 font=('Arial', 11, 'bold'), width=15)
+        self.canvas1.create_window(100, 220, window=self.button4)
 
-        self.button5 = tk.Button(self, text='Exit Application', command=self.master.destroy, bg='red',
-                                 font=('Arial', 11, 'bold'))
-        self.canvas1.create_window(70, 240, window=self.button5)
+        self.button5 = tk.Button(self, text='Exit Application', command=self.master.destroy, bg='lightsteelblue2',
+                                 font=('Arial', 11, 'bold'), width=15)
+        self.canvas1.create_window(100, 270, window=self.button5)
 
     def defAlgorithms(self):
         self.type = tk.StringVar()
@@ -79,34 +79,33 @@ class OurApp(tk.Frame):
         self.type.set(self.getter)
         self.typer = tk.OptionMenu(self, self.type, *choices)
         self.typer.pack()
-        self.canvas1.create_window(750, 100, window=self.typer)
+        self.canvas1.create_window(750, 150, window=self.typer)
 
-        label = tk.Label(self, text='Input type:')
+        label = tk.Label(self, text='Input type:', width=15)
         label.config(font=('Arial', 9))
-        self.canvas1.create_window(750, 70, window=label)
+        self.canvas1.create_window(740, 120, window=label)
 
-        label = tk.Label(self, text='Metric Space:')
+        label = tk.Label(self, text='Metric Space:', width=15)
         label.config(font=('Arial', 9))
-        self.canvas1.create_window(650, 190, window=label)
+        self.canvas1.create_window(640, 240, window=label)
 
-        label = tk.Label(self, text='Algorithm:')
+        label = tk.Label(self, text='Algorithm:', width=15)
         label.config(font=('Arial', 9))
-        self.canvas1.create_window(740, 190, window=label)
+        self.canvas1.create_window(740, 240, window=label)
 
         self.choiceDist = tk.StringVar()
         choices = ("Sphere", "Euclidean", "Manhattan", "Chebyshev", "Octile")
         self.choiceDist.set(choices[0])
-
         self.distances = tk.OptionMenu(self, self.choiceDist, *choices)
         self.distances.pack()
-        self.canvas1.create_window(650, 220, window=self.distances)
+        self.canvas1.create_window(640, 270, window=self.distances)
 
         self.choiceAlgo = tk.StringVar()
         choices = ('A*', 'Dijkstra')
         self.choiceAlgo.set(choices[0])
         self.algorithms = tk.OptionMenu(self, self.choiceAlgo, *choices)
         self.algorithms.pack()
-        self.canvas1.create_window(740, 220, window=self.algorithms)
+        self.canvas1.create_window(740, 270, window=self.algorithms)
 
     def __setWorld(self):
         start = self.getStart()
@@ -117,6 +116,7 @@ class OurApp(tk.Frame):
             self.graph = RoadMap(start, end, graph_type='address')
         else:
             self.graph = RoadMap(start, end)
+        self.show()
 
     def __clearWorld(self):
         if self.getter != self.type.get():
@@ -151,63 +151,36 @@ class OurApp(tk.Frame):
             self.ax.set_title('No graph to show.')
 
     def __ApplySettings(self):
-        label = tk.Label(self, text='Real World Path Finder')
+        label = tk.Label(self, text='Shortest Path Finder On Earth')
         label.config(font=('Arial', 20))
-        self.canvas1.create_window(400, 20, window=label)
+        self.canvas1.create_window(400, 50, window=label)
         if self.type.get() == 'points':
-            self.lon1 = tk.StringVar(self)
-            self.lat1 = tk.StringVar(self)
+            self.latlon1 = tk.StringVar(self)
+            self.latlon0 = tk.StringVar(self)
 
-            self.lon0 = tk.StringVar(self)
-            self.lat0 = tk.StringVar(self)
+            entery = tk.Entry(self, textvariable=self.latlon1)
+            self.canvas1.create_window(400, 180, window=entery, width=250)
 
-            entery = tk.Entry(self, textvariable=self.lat0)
+            entery = tk.Entry(self, textvariable=self.latlon0)
+            self.canvas1.create_window(400, 230, window=entery, width=250)
 
-            self.canvas1.create_window(320, 100, window=entery)
-
-            entery = tk.Entry(self, textvariable=self.lon0)
-            self.canvas1.create_window(480, 100, window=entery)
-
-            entery = tk.Entry(self, textvariable=self.lat1)
-            self.canvas1.create_window(320, 150, window=entery)
-            entery = tk.Entry(self, textvariable=self.lon1)
-            self.canvas1.create_window(480, 150, window=entery)
-
-            label = tk.Label(self, text='Goal Coordinate')
+            label = tk.Label(self, text='Goal Coordinate: lat,lon')
             label.config(font=('Arial', 9))
-            self.canvas1.create_window(400, 130, window=label)
+            self.canvas1.create_window(400, 210, window=label)
 
-            label = tk.Label(self, text='lat:')
+            label = tk.Label(self, text='Start Coordinate: lat,lon')
             label.config(font=('Arial', 9))
-            self.canvas1.create_window(245, 100, window=label)
-
-            label = tk.Label(self, text='Start Coordinate')
-            label.config(font=('Arial', 9))
-            self.canvas1.create_window(400, 80, window=label)
-
-            label = tk.Label(self, text='lat:')
-            label.config(font=('Arial', 9))
-            self.canvas1.create_window(245, 150, window=label)
-
-            label = tk.Label(self, text='lon:')
-
-            label.config(font=('Arial', 9))
-            self.canvas1.create_window(405, 100, window=label)
-
-            label = tk.Label(self, text='lon:')
-            label.config(font=('Arial', 9))
-            self.canvas1.create_window(405, 150, window=label)
+            self.canvas1.create_window(400, 160, window=label)
 
         else:
             self.address1 = tk.StringVar(self)
             self.address2 = tk.StringVar(self)
 
-            entery = tk.Entry(self, textvariable=self.address1)
-
+            entery = tk.Entry(self, textvariable=self.address1, width=200)
             self.canvas1.create_window(400, 100, window=entery)
 
             entery = tk.Entry(self, textvariable=self.address2)
-            self.canvas1.create_window(400, 150, window=entery)
+            self.canvas1.create_window(400, 150, window=entery, width=200)
 
             label = tk.Label(self, text='Start Address:')
             label.config(font=('Arial', 9))
@@ -220,20 +193,24 @@ class OurApp(tk.Frame):
     def getStart(self):
         if self.getter != 'points':
             return self.address1.get()
-        l1 = self.lat0.get()
-        l2 = self.lon0.get()
+        l1 = self.latlon0.get().split(',')[0]
+        l2 = self.latlon0.get().split(',')[1]
         if l1 == '' or l2 == '':
             return None, None
-        return float(self.lat0.get()), float(self.lon0.get())
+        f1 = float(self.latlon0.get().split(',')[0])
+        f2 = float(self.latlon0.get().split(',')[1])
+        return f1, f2
 
     def getEnd(self):
         if self.getter != 'points':
             return self.address2.get()
-        l1 = self.lat1.get()
-        l2 = self.lon1.get()
+        l1 = self.latlon1.get().split(',')[0]
+        l2 = self.latlon1.get().split(',')[1]
         if l1 == '' or l2 == '':
             return None, None
-        return float(self.lat1.get()), float(self.lon1.get())
+        f1 = float(self.latlon1.get().split(',')[0])
+        f2 = float(self.latlon1.get().split(',')[1])
+        return f1, f2
 
     def applyAlgorithm(self):
         which = self.choiceAlgo.get()
@@ -264,8 +241,9 @@ class OurApp(tk.Frame):
 
 app = OurApp(root)
 app.mainloop()
-32.0141
-34.7736
-32.0184
-34.7761
-(32.0184, 34.7741), (32.0132, 34.7793)
+
+# 32.0141
+# 34.7736
+# 32.0184
+# 34.7761
+# (32.0184, 34.7741), (32.0132, 34.7793)
