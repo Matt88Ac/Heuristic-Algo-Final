@@ -117,8 +117,16 @@ class RoadMap:
                                                         'living_street': 20}, fallback=1)
         self.G = ox.add_edge_travel_times(self.G)
 
+        g_nodes = self.G.nodes(data=True)
+
         self.start = ox.get_nearest_node(self.G, start)
         self.end = ox.get_nearest_node(self.G, end)
+
+        print('\n-- Notice that requested coordinates are')
+        print('---- src =', start, ', dst =', end)
+        print('-- Actual coordinate are')
+        print('---- src =', (g_nodes[self.start]['y'], g_nodes[self.start]['x']),
+              ', dst =', (g_nodes[self.end]['y'], g_nodes[self.end]['x']), '\n')
 
         self.nodes = np.array(list(self.G.nodes))
         self.edges = np.array(list(self.G.edges), dtype=float)
@@ -358,7 +366,7 @@ class RoadMap:
             return path, t, steps, wt
         else:
             print('There is no path')
-            return [], 0, 0
+            return [], 0, 0, 0
 
     def applyAlgorithm(self, algorithm, heuristic_function=calcGreatCircleDistanceOnEarth, with_viz=False) -> tuple:
         """
@@ -563,8 +571,9 @@ class RoadMap:
 #                    data[spot, 2] = st
 #                    data[spot, 3] = 'A*'
 #                    data[spot, 4] = name
-#                    data[spot, 5] = w
-#                    data[spot, 6] = net_type
+#                    data[spot, 5] = len(graph)
+#                    data[spot, 6] = w
+#                    data[spot, 7] = net_type
 #                    spot += 1
 #
 #            else:
@@ -574,22 +583,17 @@ class RoadMap:
 #                data[spot, 2] = st
 #                data[spot, 3] = 'Dijkstra'
 #                data[spot, 4] = 'H(x, y)=0'
-#                data[spot, 5] = w
-#                data[spot, 6] = net_type
+#                data[spot, 5] = len(graph)
+#                data[spot, 6] = w
+#                data[spot, 7] = net_type
 #                spot += 1
 #
 #        print('done')
-##
-# import pandas as pd
-# data = pd.DataFrame(data, columns=cols)
-# data.to_csv('our_data.csv')
+#
+#import pandas as pd
+#
+#data = pd.DataFrame(data, columns=cols)
+#data.to_csv('our_data.csv')
 
-# a = (32.0142, 34.7736)
-# b = (32.0184, 34.7761)
-#
-# rm = RoadMap(a, b)
-#
-# p, ti, st = rm.applyAlgorithm(0, calcGreatCircleDistanceOnEarth)
-# print(ti)
 # print(st)
 # rm.plot(path=p)
