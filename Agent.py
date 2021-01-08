@@ -239,8 +239,27 @@ class OurApp(tk.Frame):
         elif dist == 'Octile':
             dist = calcOctileDistanceOnEarth
 
-        self.path, self.time, self.steps, _ = self.graph.applyAlgorithm(which, dist)
-        #if self.path and len(self.path) > 0:
+        self.path, self.time, self.steps, total_weight = self.graph.applyAlgorithm(which, dist)
+
+        count = 0
+        path_length = 0
+        path_time = 0
+        path_street_names = []
+
+        d = self.graph.G.edges
+        for p in self.path:
+            first_node = [p[0], p[1]]
+            if first_node in d:
+                edge_data = d[(first_node[0], first_node[1], 0)]
+                count += 1
+                path_length += edge_data['length']
+                path_time += edge_data['travel_time']
+                path_street_names.append(edge_data['name'])
+
+        print('-- Path length = ', path_length, '[meters]')
+        print('-- Path travel time = ', (path_time / 60.0), '[minutes]')
+        print('-- Path street names = ', path_street_names)
+        print('-- Estimated arrival time = ', (total_weight/60.0), '[minutes]', '\n')
         self.show()
 
 
