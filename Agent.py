@@ -254,7 +254,10 @@ class OurApp(tk.Frame):
                 count += 1
                 path_length += edge_data['length']
                 path_time += edge_data['travel_time']
-                path_street_names.append(edge_data['name'])
+                if 'name' in edge_data:
+                    path_street_names.append(edge_data['name'])
+                else:
+                    path_street_names.append('no name')
 
         print('-- Path length = ', path_length, '[meters]')
         print('-- Path travel time = ', (path_time / 60.0), '[minutes]')
