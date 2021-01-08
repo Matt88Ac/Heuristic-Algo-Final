@@ -13,6 +13,7 @@ EARTH_RADIUS = 6371 * 10 ** 3  # Earth radius [M]
 SIGHT_RADIUS_ADDITION = 100  # The addition to the radius between the user's start and stop points [M]
 NAMES_RATIO = 5  # if edge length is at least sight_radius/NAMES_RATIO it will have a name, don't put 0
 IS_NAMING_ON = True
+NTYPE = 'bike'  # 'drive'
 
 # Global variables
 sight_radius = SIGHT_RADIUS_ADDITION
@@ -98,7 +99,7 @@ def move_figure(f, x, y):
 
 class RoadMap:
 
-    def __init__(self, start: Union[tuple, str], end: Union[tuple, str], network_type='drive', graph_type='points'):
+    def __init__(self, start: Union[tuple, str], end: Union[tuple, str], network_type=NTYPE, graph_type='points'):
         if graph_type == 'points':
             self.dist = int(calcGreatCircleDistanceOnEarth(start, end) + SIGHT_RADIUS_ADDITION)
             self.G = ox.graph_from_point(start, dist=self.dist, network_type=network_type)
@@ -127,6 +128,8 @@ class RoadMap:
         print('-- Actual coordinate are')
         print('---- src =', (g_nodes[self.start]['y'], g_nodes[self.start]['x']),
               ', dst =', (g_nodes[self.end]['y'], g_nodes[self.end]['x']), '\n')
+        print('\n-- Number of nodes = ', len(g_nodes))
+        print('\n-- Navigation type = ', NTYPE)
 
         self.nodes = np.array(list(self.G.nodes))
         self.edges = np.array(list(self.G.edges), dtype=float)
