@@ -2,7 +2,7 @@ import pandas as pd
 from matplotlib import pyplot as plt
 import numpy as np
 from matplotlib import style
-import seaborn as sns
+# import seaborn as sns
 
 style.use('ggplot')
 
