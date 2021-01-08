@@ -167,13 +167,13 @@ class OurApp(tk.Frame):
             label.config(font=('Arial', 9))
             self.canvas1.create_window(400, 210, window=label)
 
-            self.label_time = tk.Label(self, text=f'time of work = ?(s), total steps = ?')
-            self.label_time.config(font=('Arial', 9))
-            self.canvas1.create_window(400, 280, window=self.label_time)
-
-            self.label_error = tk.Label(self, text='')
-            self.label_error.config(font=('Arial', 9))
-            self.canvas1.create_window(400, 310, window=self.label_error)
+            # self.label_time = tk.Label(self, text=f'time of work = ?(s), total steps = ?')
+            # self.label_time.config(font=('Arial', 9))
+            # self.canvas1.create_window(400, 280, window=self.label_time)
+            #
+            # self.label_error = tk.Label(self, text='')
+            # self.label_error.config(font=('Arial', 9))
+            # self.canvas1.create_window(400, 310, window=self.label_error)
 
         else:
             self.address1 = tk.StringVar(self)
